@@ -1,4 +1,4 @@
-name: Apply Lesson 02 conformance patch
+name: Apply Lesson 02 resource recovery patch
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Patch learner-facing HTML
+      - name: Restore learner-facing examples, resources and videos
         shell: bash
         run: |
           python - <<'PY'
@@ -25,72 +25,60 @@ jobs:
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
 
-          def replace_once(old, new, label):
-              global s
-              if old in s:
-                  s = s.replace(old, new, 1)
-                  return
-              if new in s:
-                  return
-              raise SystemExit(f'Missing expected source fragment for {label}: {old[:120]}')
+          s = s.replace('<h2>Quick Check</h2>', '<h2>Швидка перевірка</h2>')
 
-          replace_once(
-              '>Практичні орієнтири<',
-              '>Практичне застосування<',
-              'navigation label'
-          )
+          block = '''
+          <section aria-labelledby="examples-title">
+            <h2 id="examples-title">Корисні орієнтири для міської візії</h2>
+            <p>Ці ресурси допомагають перевірити, чи візія громади охоплює ключові міські виклики та чи може вона перейти від загального бачення до практичних рішень.</p>
+            <div class="orientation-grid">
+              <article>
+                <h3>Green City Accord</h3>
+                <p>Європейська рамка для комплексного погляду на якість повітря, воду, природу й біорізноманіття, циркулярну економіку, відходи та шумове середовище.</p>
+                <p><a class="button secondary" href="https://regions-and-cities.ec.europa.eu/cities-portal/eu-initiatives-cities/green-city-accord_en" target="_blank" rel="noopener noreferrer">Відкрити Green City Accord</a></p>
+              </article>
+              <article>
+                <h3>TOMORROW Transition Toolbox</h3>
+                <p>Практичний набір інструментів, який показує, як перейти від міського бачення до дорожньої карти, партнерств і послідовних дій.</p>
+                <p><a class="button secondary" href="https://www.citiesoftomorrow.eu/resources/toolbox/" target="_blank" rel="noopener noreferrer">Відкрити Transition Toolbox</a></p>
+              </article>
+            </div>
+          </section>
+          <section aria-labelledby="video-title">
+            <h2 id="video-title">Відео про циркулярну економіку</h2>
+            <p>Дві короткі лекції допоможуть поглибити розуміння циркулярної економіки та її значення для українських громад.</p>
+            <div class="orientation-grid">
+              <article>
+                <h3>Вступ до циркулярної економіки</h3>
+                <p>Базове пояснення принципів циркулярної економіки та переходу від лінійної моделі використання ресурсів.</p>
+                <p><a class="button primary" href="https://www.youtube.com/watch?v=gWjJ80S-S_8" target="_blank" rel="noopener noreferrer">Переглянути відео</a></p>
+              </article>
+              <article>
+                <h3>Потенціал циркулярної економіки в Україні</h3>
+                <p>Огляд можливостей застосування циркулярних підходів в українському контексті.</p>
+                <p><a class="button primary" href="https://www.youtube.com/watch?v=JRiTGhkzSkM&t=1s" target="_blank" rel="noopener noreferrer">Переглянути відео</a></p>
+              </article>
+            </div>
+          </section>
+'''
 
-          replace_once(
-              '<td>Приклади, ресурси й відео</td>',
-              '<td>Практичне застосування</td>',
-              'lesson map title'
-          )
+          if 'id="examples-title"' not in s:
+              marker = '''        </section>
+        
+      </div>
+    </section>
 
-          replace_once(
-              '<td>Використати підтверджені міжнародні орієнтири та зберегти Open Flags без вигаданих кейсів.</td>',
-              '<td>Перевірити, як кліматично нейтральна візія допомагає ухвалювати рішення в умовах відновлення, обмеженого бюджету та потреби у довірі.</td>',
-              'lesson map activity'
-          )
+    <section id="page-6"'''
+              replacement = '''        </section>
+''' + block + '''      </div>
+    </section>
 
-          replace_once(
-              'Силабус Заняття 02 підкреслює важливість city vision, mission and climate strategy. Для UCAN це означає: громада має навчитися формулювати не лише перелік проєктів, а коротку управлінську відповідь на питання: яким містом ми хочемо бути і як це має змінити наші рішення?',
-              'Для громади важливо сформулювати не лише перелік проєктів, а коротку управлінську відповідь на питання: яким містом ми хочемо бути і як це має змінити наші рішення?',
-              'page 4 introduction'
-          )
+    <section id="page-6"'''
+              if marker not in s:
+                  raise SystemExit('Page 5 insertion marker not found')
+              s = s.replace(marker, replacement, 1)
 
-          replace_once(
-              '<h2 id="ukraine-title">Український контекст: без вигаданого кейсу</h2>',
-              '<h2 id="ukraine-title">Український контекст</h2>',
-              'Ukrainian context heading'
-          )
-
-          replace_once(
-              'У цьому занятті український кейс не додається як приклад, доки він не має SVS-підтвердження. Натомість учасники працюють із власним викликом громади і формулюють візію без прив’язки до неперевіреної історії успіху.',
-              'Під час заняття учасники працюють із власним викликом громади й формулюють візію без прив’язки до неперевіреної історії успіху.',
-              'Ukrainian context paragraph'
-          )
-
-          replace_once(
-              'Збережену або надруковану картку можна використати в Занятті 03 як основу для перевірки того, які технології, дані та цифрові рішення можуть підтримати цю візію.',
-              'Збережену або надруковану картку можна передати AI-асистенту для аналізу, уточнення або покращення формулювань. Вона також стане основою для Заняття 03, де команда перевірятиме, які технології, дані та цифрові рішення можуть підтримати цю візію.',
-              'AI assistant note'
-          )
-
-          start_marker = '<section aria-labelledby="orientation-title">'
-          start = s.find(start_marker)
-          if start != -1:
-              end = s.find('</section>', start)
-              if end == -1:
-                  raise SystemExit('Unclosed orientation section')
-              s = s[:start] + s[end + len('</section>'):]
-
-          forbidden = [
-              'Open Flags',
-              'SVS-статус',
-              'Силабус Заняття 02',
-              'Green City Accord',
-              'TOMORROW Transition Toolbox'
-          ]
+          forbidden = ['Open Flags', 'SVS-статус', 'Силабус Заняття 02']
           leftovers = [term for term in forbidden if term in s]
           if leftovers:
               raise SystemExit(f'Forbidden learner-facing terms remain: {leftovers}')
@@ -105,5 +93,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Apply Lesson 02 HTML conformance patch 01'
+          git commit -m 'Restore Lesson 02 examples resources and videos'
           git push
