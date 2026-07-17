@@ -349,3 +349,27 @@ select {
   body.print-portfolio .summary-actions { display: none !important; }
   body.print-portfolio .portfolio-meta { display: block !important; border: 0; padding: 0; }
 }
+
+
+/* Patch 03.1 — visible AI instructions and calm timing */
+.ai-steps {
+  margin: .4rem 0 1rem;
+  padding-left: 1.35rem;
+}
+.ai-steps li { margin: .45rem 0; }
+.ai-actions { margin-top: 1rem; }
+.prompt-instruction {
+  margin: .8rem 0;
+  color: var(--muted);
+}
+.prompt-preview pre {
+  max-height: 28rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+@media (max-width: 640px) {
+  .ai-actions { display: grid; grid-template-columns: 1fr; }
+  .ai-actions .button { width: 100%; justify-content: center; }
+}
