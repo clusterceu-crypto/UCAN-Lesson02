@@ -1,0 +1,67 @@
+name: Apply Lesson 02 conformance patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-l02-conformance-patch.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-html:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch learner-facing HTML
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          replacements = {
+            '>Практичні орієнтири<': '>Практичне застосування<',
+            '<td>Приклади, ресурси й відео</td>': '<td>Практичне застосування</td>',
+            '<td>Використати підтверджені міжнародні орієнтири та зберегти Open Flags без вигаданих кейсів.</td>': '<td>Перевірити, як кліматично нейтральна візія допомагає ухвалювати рішення в умовах відновлення, обмеженого бюджету та потреби у довірі.</td>',
+            'Силабус Заняття 02 підкреслює важливість того, щоб громада сформулювала не лише перелік проєктів, а коротку управлінську відповідь на питання: яким містом ми хочемо бути і як це має змінити наші рішення?': 'Для громади важливо сформулювати не лише перелік проєктів, а коротку управлінську відповідь на питання: яким містом ми хочемо бути і як це має змінити наші рішення?',
+            '<h2>Український контекст і SVS-статус</h2>': '<h2>Український контекст</h2>',
+            'У цьому занятті український кейс не додається, доки він не пройде SVS-підтвердження. Тому учасники працюють із власним викликом громади й формулюють візію без прив’язки до неперевіреної історії успіху.': 'Під час заняття учасники працюють із власним викликом громади й формулюють візію без прив’язки до неперевіреної історії успіху.',
+            'Збережену картку можна використати як основу для Заняття 03, де команда перевірятиме, які технології, дані та цифрові рішення можуть підтримати цю візію.': 'Збережену картку можна передати AI-асистенту для аналізу, уточнення або покращення формулювань. Вона також стане основою для Заняття 03, де команда перевірятиме, які технології, дані та цифрові рішення можуть підтримати цю візію.'
+          }
+
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Missing expected source fragment: {old[:90]}')
+              s = s.replace(old, new, 1)
+
+          start = s.find('<section aria-labelledby="orientation-title">')
+          if start == -1:
+              raise SystemExit('Missing orientation section')
+          end = s.find('</section>', start)
+          if end == -1:
+              raise SystemExit('Unclosed orientation section')
+          s = s[:start] + s[end + len('</section>'):]
+
+          forbidden = ['Open Flags', 'SVS-статус', 'Силабус Заняття 02', 'Green City Accord', 'TOMORROW Transition Toolbox']
+          leftovers = [term for term in forbidden if term in s]
+          if leftovers:
+              raise SystemExit(f'Forbidden learner-facing terms remain: {leftovers}')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Apply Lesson 02 HTML conformance patch 01'
+          git push
