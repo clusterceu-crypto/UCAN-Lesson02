@@ -462,15 +462,20 @@ ${caseNotes['case-principle'] || '[не заповнено]'}`;
     });
     portfolioDate.textContent = new Date().toLocaleDateString('uk-UA');
     portfolioSummary.hidden = false;
-    aiAssistantBlock.hidden = false;
     printPortfolioButton.disabled = false;
     aiPromptText.textContent = buildAiPrompt();
   }
 
   portfolioFields.forEach((field) => field.addEventListener('input', () => {
     savePortfolioSilently();
+    aiPromptText.textContent = buildAiPrompt();
     if (!portfolioSummary.hidden) renderPortfolioSummary();
   }));
+
+  caseFields.forEach((field) => {
+    field.addEventListener('input', () => { aiPromptText.textContent = buildAiPrompt(); });
+    field.addEventListener('change', () => { aiPromptText.textContent = buildAiPrompt(); });
+  });
 
   portfolioForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -530,13 +535,14 @@ ${caseNotes['case-principle'] || '[не заповнено]'}`;
     portfolioForm.reset();
     safeStorage.remove(FORM_KEY);
     portfolioSummary.hidden = true;
-    aiAssistantBlock.hidden = true;
     printPortfolioButton.disabled = true;
+    aiPromptText.textContent = buildAiPrompt();
     portfolioStatus.textContent = 'Форму очищено.';
     portfolioStatus.className = 'feedback';
   });
 
   restorePortfolio();
+  aiPromptText.textContent = buildAiPrompt();
   if (formHasContent()) renderPortfolioSummary();
 
   // Final test — Assessment Correction Addendum v1.0.
