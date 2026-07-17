@@ -1,9 +1,6 @@
 name: Apply Lesson 02 resource recovery patch
 
 on:
-  push:
-    paths:
-      - '.github/workflows/apply-l02-conformance-patch.yml'
   workflow_dispatch:
 
 permissions:
@@ -11,7 +8,6 @@ permissions:
 
 jobs:
   patch-html:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,72 +15,8 @@ jobs:
       - name: Restore learner-facing examples, resources and videos
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          s = s.replace('<h2>Quick Check</h2>', '<h2>Швидка перевірка</h2>')
-
-          block = '''
-          <section aria-labelledby="examples-title">
-            <h2 id="examples-title">Корисні орієнтири для міської візії</h2>
-            <p>Ці ресурси допомагають перевірити, чи візія громади охоплює ключові міські виклики та чи може вона перейти від загального бачення до практичних рішень.</p>
-            <div class="orientation-grid">
-              <article>
-                <h3>Green City Accord</h3>
-                <p>Європейська рамка для комплексного погляду на якість повітря, воду, природу й біорізноманіття, циркулярну економіку, відходи та шумове середовище.</p>
-                <p><a class="button secondary" href="https://regions-and-cities.ec.europa.eu/cities-portal/eu-initiatives-cities/green-city-accord_en" target="_blank" rel="noopener noreferrer">Відкрити Green City Accord</a></p>
-              </article>
-              <article>
-                <h3>TOMORROW Transition Toolbox</h3>
-                <p>Практичний набір інструментів, який показує, як перейти від міського бачення до дорожньої карти, партнерств і послідовних дій.</p>
-                <p><a class="button secondary" href="https://www.citiesoftomorrow.eu/resources/toolbox/" target="_blank" rel="noopener noreferrer">Відкрити Transition Toolbox</a></p>
-              </article>
-            </div>
-          </section>
-          <section aria-labelledby="video-title">
-            <h2 id="video-title">Відео про циркулярну економіку</h2>
-            <p>Дві короткі лекції допоможуть поглибити розуміння циркулярної економіки та її значення для українських громад.</p>
-            <div class="orientation-grid">
-              <article>
-                <h3>Вступ до циркулярної економіки</h3>
-                <p>Базове пояснення принципів циркулярної економіки та переходу від лінійної моделі використання ресурсів.</p>
-                <p><a class="button primary" href="https://www.youtube.com/watch?v=gWjJ80S-S_8" target="_blank" rel="noopener noreferrer">Переглянути відео</a></p>
-              </article>
-              <article>
-                <h3>Потенціал циркулярної економіки в Україні</h3>
-                <p>Огляд можливостей застосування циркулярних підходів в українському контексті.</p>
-                <p><a class="button primary" href="https://www.youtube.com/watch?v=JRiTGhkzSkM&t=1s" target="_blank" rel="noopener noreferrer">Переглянути відео</a></p>
-              </article>
-            </div>
-          </section>
-'''
-
-          if 'id="examples-title"' not in s:
-              marker = '''        </section>
-        
-      </div>
-    </section>
-
-    <section id="page-6"'''
-              replacement = '''        </section>
-''' + block + '''      </div>
-    </section>
-
-    <section id="page-6"'''
-              if marker not in s:
-                  raise SystemExit('Page 5 insertion marker not found')
-              s = s.replace(marker, replacement, 1)
-
-          forbidden = ['Open Flags', 'SVS-статус', 'Силабус Заняття 02']
-          leftovers = [term for term in forbidden if term in s]
-          if leftovers:
-              raise SystemExit(f'Forbidden learner-facing terms remain: {leftovers}')
-
-          p.write_text(s, encoding='utf-8')
-          PY
+          echo 'CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aAoKcCA9IFBhdGgoImluZGV4Lmh0bWwiKQpzID0gcC5yZWFkX3RleHQoZW5jb2Rpbmc9InV0Zi04IikKcyA9IHMucmVwbGFjZSgiPGgyPlF1aWNrIENoZWNrPC9oMj4iLCAiPGgyPtCo0LLQuNC00LrQsCDQv9C10YDQtdCy0ZbRgNC60LA8L2gyPiIpCgpibG9jayA9ICIiIgogICAgICAgICAgPHNlY3Rpb24gYXJpYS1sYWJlbGxlZGJ5PSJleGFtcGxlcy10aXRsZSI+CiAgICAgICAgICAgIDxoMiBpZD0iZXhhbXBsZXMtdGl0bGUiPtCa0L7RgNC40YHQvdGWINC+0YDRltGU0L3RgtC40YDQuCDQtNC70Y8g0LzRltGB0YzQutC+0Zcg0LLRltC30ZbRlzwvaDI+CiAgICAgICAgICAgIDxwPtCm0ZYg0YDQtdGB0YPRgNGB0Lgg0LTQvtC/0L7QvNCw0LPQsNGO0YLRjCDQv9C10YDQtdCy0ZbRgNC40YLQuCwg0YfQuCDQstGW0LfRltGPINCz0YDQvtC80LDQtNC4INC+0YXQvtC/0LvRjtGUINC60LvRjtGH0L7QstGWINC80ZbRgdGM0LrRliDQstC40LrQu9C40LrQuCDRgtCwINGH0Lgg0LzQvtC20LUg0LLQvtC90LAg0L/QtdGA0LXQudGC0Lgg0LLRltC0INC30LDQs9Cw0LvRjNC90L7Qs9C+INCx0LDRh9C10L3QvdGPINC00L4g0L/RgNCw0LrRgtC40YfQvdC40YUg0YDRltGI0LXQvdGMLjwvcD4KICAgICAgICAgICAgPGRpdiBjbGFzcz0ib3JpZW50YXRpb24tZ3JpZCI+CiAgICAgICAgICAgICAgPGFydGljbGU+CiAgICAgICAgICAgICAgICA8aDM+R3JlZW4gQ2l0eSBBY2NvcmQ8L2gzPgogICAgICAgICAgICAgICAgPHA+0ITQstGA0L7Qv9C10LnRgdGM0LrQsCDRgNCw0LzQutCwINC00LvRjyDQutC+0LzQv9C70LXQutGB0L3QvtCz0L4g0L/QvtCz0LvRj9C00YMg0L3QsCDRj9C60ZbRgdGC0Ywg0L/QvtCy0ZbRgtGA0Y8sINCy0L7QtNGDLCDQv9GA0LjRgNC+0LTRgyDQuSDQsdGW0L7RgNGW0LfQvdC+0LzQsNC90ZbRgtGC0Y8sINGG0LjRgNC60YPQu9GP0YDQvdGDINC10LrQvtC90L7QvNGW0LrRgywg0LLRltC00YXQvtC00Lgg0YLQsCDRiNGD0LzQvtCy0LUg0YHQtdGA0LXQtNC+0LLQuNGJ0LUuPC9wPgogICAgICAgICAgICAgICAgPHA+PGEgY2xhc3M9ImJ1dHRvbiBzZWNvbmRhcnkiIGhyZWY9Imh0dHBzOi8vcmVnaW9ucy1hbmQtY2l0aWVzLmVjLmV1cm9wYS5ldS9jaXRpZXMtcG9ydGFsL2V1LWluaXRpYXRpdmVzLWNpdGllcy9ncmVlbi1jaXR5LWFjY29yZF9lbiIgdGFyZ2V0PSJfYmxhbmsiIHJlbD0ibm9vcGVuZXIgbm9yZWZlcnJlciI+0JLRltC00LrRgNC40YLQuCBHcmVlbiBDaXR5IEFjY29yZDwvYT48L3A+CiAgICAgICAgICAgICAgPC9hcnRpY2xlPgogICAgICAgICAgICAgIDxhcnRpY2xlPgogICAgICAgICAgICAgICAgPGgzPlRPTU9SUk9XIFRyYW5zaXRpb24gVG9vbGJveDwvaDM+CiAgICAgICAgICAgICAgICA8cD7Qn9GA0LDQutGC0LjRh9C90LjQuSDQvdCw0LHRltGAINGW0L3RgdGC0YDRg9C80LXQvdGC0ZbQsiwg0Y/QutC40Lkg0L/QvtC60LDQt9GD0ZQsINGP0Log0L/QtdGA0LXQudGC0Lgg0LLRltC0INC80ZbRgdGM0LrQvtCz0L4g0LHQsNGH0LXQvdC90Y8g0LTQviDQtNC+0YDQvtC20L3RjNC+0Zcg0LrQsNGA0YLQuCwg0L/QsNGA0YLQvdC10YDRgdGC0LIg0ZYg0L/QvtGB0LvRltC00L7QstC90LjRhSDQtNGW0LkuPC9wPgogICAgICAgICAgICAgICAgPHA+PGEgY2xhc3M9ImJ1dHRvbiBzZWNvbmRhcnkiIGhyZWY9Imh0dHBzOi8vd3d3LmNpdGllc29mdG9tb3Jyb3cuZXUvcmVzb3VyY2VzL3Rvb2xib3gvIiB0YXJnZXQ9Il9ibGFuayIgcmVsPSJub29wZW5lciBub3JlZmVycmVyIj7QktGW0LTQutGA0LjRgtC4IFRyYW5zaXRpb24gVG9vbGJveDwvYT48L3A+CiAgICAgICAgICAgICAgPC9hcnRpY2xlPgogICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDwvc2VjdGlvbj4KICAgICAgICAgIDxzZWN0aW9uIGFyaWEtbGFiZWxsZWRieT0idmlkZW8tdGl0bGUiPgogICAgICAgICAgICA8aDIgaWQ9InZpZGVvLXRpdGxlIj7QktGW0LTQtdC+INC/0YDQviDRhtC40YDQutGD0LvRj9GA0L3RgyDQtdC60L7QvdC+0LzRltC60YM8L2gyPgogICAgICAgICAgICA8cD7QlNCy0ZYg0LrQvtGA0L7RgtC60ZYg0LvQtdC60YbRltGXINC00L7Qv9C+0LzQvtC20YPRgtGMINC/0L7Qs9C70LjQsdC40YLQuCDRgNC+0LfRg9C80ZbQvdC90Y8g0YbQuNGA0LrRg9C70Y/RgNC90L7RlyDQtdC60L7QvdC+0LzRltC60Lgg0YLQsCDRl9GXINC30L3QsNGH0LXQvdC90Y8g0LTQu9GPINGD0LrRgNCw0ZfQvdGB0YzQutC40YUg0LPRgNC+0LzQsNC0LjwvcD4KICAgICAgICAgICAgPGRpdiBjbGFzcz0ib3JpZW50YXRpb24tZ3JpZCI+CiAgICAgICAgICAgICAgPGFydGljbGU+CiAgICAgICAgICAgICAgICA8aDM+0JLRgdGC0YPQvyDQtNC+INGG0LjRgNC60YPQu9GP0YDQvdC+0Zcg0LXQutC+0L3QvtC80ZbQutC4PC9oMz4KICAgICAgICAgICAgICAgIDxwPtCR0LDQt9C+0LLQtSDQv9C+0Y/RgdC90LXQvdC90Y8g0L/RgNC40L3RhtC40L/RltCyINGG0LjRgNC60YPQu9GP0YDQvdC+0Zcg0LXQutC+0L3QvtC80ZbQutC4INGC0LAg0L/QtdGA0LXRhdC+0LTRgyDQstGW0LQg0LvRltC90ZbQudC90L7RlyDQvNC+0LTQtdC70ZYg0LLQuNC60L7RgNC40YHRgtCw0L3QvdGPINGA0LXRgdGD0YDRgdGW0LIuPC9wPgogICAgICAgICAgICAgICAgPHA+PGEgY2xhc3M9ImJ1dHRvbiBwcmltYXJ5IiBocmVmPSJodHRwczovL3d3dy55b3V0dWJlLmNvbS93YXRjaD92PWdXako4MFMtU184IiB0YXJnZXQ9Il9ibGFuayIgcmVsPSJub29wZW5lciBub3JlZmVycmVyIj7Qn9C10YDQtdCz0LvRj9C90YPRgtC4INCy0ZbQtNC10L48L2E+PC9wPgogICAgICAgICAgICAgIDwvYXJ0aWNsZT4KICAgICAgICAgICAgICA8YXJ0aWNsZT4KICAgICAgICAgICAgICAgIDxoMz7Qn9C+0YLQtdC90YbRltCw0Lsg0YbQuNGA0LrRg9C70Y/RgNC90L7RlyDQtdC60L7QvdC+0LzRltC60Lgg0LIg0KPQutGA0LDRl9C90ZY8L2gzPgogICAgICAgICAgICAgICAgPHA+0J7Qs9C70Y/QtCDQvNC+0LbQu9C40LLQvtGB0YLQtdC5INC30LDRgdGC0L7RgdGD0LLQsNC90L3RjyDRhtC40YDQutGD0LvRj9GA0L3QuNGFINC/0ZbQtNGF0L7QtNGW0LIg0LIg0YPQutGA0LDRl9C90YHRjNC60L7QvNGDINC60L7QvdGC0LXQutGB0YLRli48L3A+CiAgICAgICAgICAgICAgICA8cD48YSBjbGFzcz0iYnV0dG9uIHByaW1hcnkiIGhyZWY9Imh0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9SlJpVEdoa3pTa00mYW1wO3Q9MXMiIHRhcmdldD0iX2JsYW5rIiByZWw9Im5vb3BlbmVyIG5vcmVmZXJyZXIiPtCf0LXRgNC10LPQu9GP0L3Rg9GC0Lgg0LLRltC00LXQvjwvYT48L3A+CiAgICAgICAgICAgICAgPC9hcnRpY2xlPgogICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDwvc2VjdGlvbj4KIiIiCgppZiAnaWQ9ImV4YW1wbGVzLXRpdGxlIicgbm90IGluIHM6CiAgICBtYXJrZXIgPSAnICAgICAgICA8L3NlY3Rpb24+XG4gICAgICAgICBcbiAgICAgIDwvZGl2PlxuICAgIDwvc2VjdGlvbj5cblxuICAgIDxzZWN0aW9uIGlkPSJwYWdlLTYiJwogICAgcmVwbGFjZW1lbnQgPSAnICAgICAgICA8L3NlY3Rpb24+XG4nICsgYmxvY2sgKyAnICAgICAgPC9kaXY+XG4gICAgPC9zZWN0aW9uPlxuXG4gICAgPHNlY3Rpb24gaWQ9InBhZ2UtNiInCiAgICBpZiBtYXJrZXIgbm90IGluIHM6CiAgICAgICAgcmFpc2UgU3lzdGVtRXhpdCgiUGFnZSA1IGluc2VydGlvbiBtYXJrZXIgbm90IGZvdW5kIikKICAgIHMgPSBzLnJlcGxhY2UobWFya2VyLCByZXBsYWNlbWVudCwgMSkKCmZvcmJpZGRlbiA9IFsiT3BlbiBGbGFncyIsICJTVlMt0YHRgtCw0YLRg9GBIiwgItCh0LjQu9Cw0LHRg9GBINCX0LDQvdGP0YLRgtGPIDAyIl0KbGVmdG92ZXJzID0gW3Rlcm0gZm9yIHRlcm0gaW4gZm9yYmlkZGVuIGlmIHRlcm0gaW4gc10KaWYgbGVmdG92ZXJzOgogICAgcmFpc2UgU3lzdGVtRXhpdChmIkZvcmJpZGRlbiBsZWFybmVyLWZhY2luZyB0ZXJtcyByZW1haW46IHtsZWZ0b3ZlcnN9IikKCnAud3JpdGVfdGV4dChzLCBlbmNvZGluZz0idXRmLTgiKQo=' | base64 --decode > /tmp/resource_patch.py
+          python /tmp/resource_patch.py
 
       - name: Commit patch
         shell: bash
