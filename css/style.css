@@ -209,3 +209,143 @@ textarea { resize: vertical; }
   .portfolio-summary dd { border-bottom: 1px solid #bbb; padding-bottom: .4rem; }
   .ai-note { break-inside: avoid; }
 }
+
+
+/* Patch 03 — Learner Experience and Assessment Quality */
+[hidden] { display: none !important; }
+.time-hint {
+  margin: 0 0 .8rem;
+  color: var(--gray-600);
+  font-size: .92rem;
+  font-weight: 700;
+}
+.progress-percent {
+  min-width: 3rem;
+  text-align: right;
+  color: var(--green);
+  font-weight: 700;
+}
+.time-overview { margin: 1.25rem 0; }
+.transition-note {
+  margin: 0 0 1.25rem;
+  padding: .9rem 1rem;
+  border-left: 5px solid var(--turquoise);
+  border-radius: 12px;
+  background: var(--turquoise-soft);
+  color: var(--navy-deep);
+  font-weight: 700;
+}
+.case-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.4rem;
+}
+.case-card {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  background: var(--white);
+  overflow: hidden;
+}
+.case-card summary {
+  cursor: pointer;
+  padding: 1rem;
+  color: var(--navy-deep);
+  font-weight: 700;
+  background: var(--gray-050);
+}
+.case-card[open] summary { border-bottom: 1px solid var(--gray-300); }
+.case-card > p { margin: 1rem; }
+.micro-task {
+  margin: 1.3rem 0;
+  padding: 1.1rem;
+  border: 1px solid #9bc9b2;
+  border-left: 6px solid var(--green);
+  border-radius: var(--radius);
+  background: var(--green-soft);
+}
+.case-note-form { display: grid; gap: .8rem; margin: 1rem 0; }
+.case-note-form label { display: grid; gap: .4rem; font-weight: 700; color: var(--navy-deep); }
+select {
+  width: 100%;
+  border: 1px solid var(--gray-300);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--text);
+  padding: .75rem;
+  font: inherit;
+}
+.checkpoint-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin: .8rem 0;
+  padding: .75rem 1rem;
+  border-radius: 12px;
+  background: var(--turquoise-soft);
+  color: var(--navy-deep);
+}
+.checkpoint-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 2px solid #e6bf78;
+  border-radius: var(--radius);
+  background: var(--warning-soft);
+}
+.checkpoint-panel h2 { margin-top: 0; }
+.checkpoint-actions, .summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .7rem;
+  align-items: center;
+}
+.portfolio-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem 1.5rem;
+  margin: 0 0 1rem;
+  padding: .8rem;
+  border-radius: 10px;
+  background: var(--gray-050);
+  color: var(--gray-600);
+}
+.summary-actions { margin-top: 1.1rem; }
+.ai-assistant {
+  margin-top: 1.5rem;
+  padding: 1.2rem;
+  border: 1px solid #9bd5d1;
+  border-left: 6px solid var(--turquoise);
+  border-radius: var(--radius);
+  background: var(--turquoise-soft);
+}
+.ai-assistant h2 { margin-top: 0; }
+.prompt-preview { margin-top: 1rem; }
+.prompt-preview summary { cursor: pointer; font-weight: 700; color: var(--navy-deep); }
+.prompt-preview pre {
+  max-height: 24rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 1rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--text);
+  font: .92rem/1.5 Arial, Aptos, sans-serif;
+}
+.orientation-grid .button, .case-card .button { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+
+@media (max-width: 900px) {
+  .case-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .checkpoint-status, .checkpoint-actions, .summary-actions, .portfolio-meta { flex-direction: column; align-items: stretch; }
+  .progress-percent { text-align: left; }
+}
+
+@media print {
+  body.print-portfolio #ai-assistant-block,
+  body.print-portfolio .summary-actions { display: none !important; }
+  body.print-portfolio .portfolio-meta { display: block !important; border: 0; padding: 0; }
+}
