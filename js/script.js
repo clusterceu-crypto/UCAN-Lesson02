@@ -1,659 +1,958 @@
 (() => {
   'use strict';
 
-  const CONFIG = Object.freeze({
-    totalPages: 10,
-    assessmentPage: 9,
-    finalPage: 10,
-    interactivePage: 6,
-    namespace: 'ucan_l02_v1_0',
-    chatgptUrl: 'https://chatgpt.com/',
-    geminiUrl: 'https://gemini.google.com/app'
-  });
+  const Interface = {};
 
-  const KEYS = Object.freeze({
-    navigation: `${CONFIG.namespace}:navigation`,
-    interactive: `${CONFIG.namespace}:interactive`,
-    test: `${CONFIG.namespace}:test`,
-    portfolio: `${CONFIG.namespace}:portfolio`,
-    completed: `${CONFIG.namespace}:completed`
-  });
-
-  const pages = [...document.querySelectorAll('.lesson-page')];
-  const pageLabel = document.getElementById('page-label');
-  const progressTrack = document.getElementById('progress-track');
-  const progressBar = document.getElementById('progress-bar');
-  const progressText = document.getElementById('progress-text');
-  const progressPercent = document.getElementById('progress-percent');
-  const bottomPageCount = document.getElementById('bottom-page-count');
-  const prevButton = document.getElementById('prev-page');
-  const nextButton = document.getElementById('next-page');
-  const globalStatus = document.getElementById('global-status');
-  const resetProgressButton = document.getElementById('reset-progress');
-
-  const state = {
-    page: 1,
-    maxVisited: 1,
-    interactiveComplete: false,
-    testComplete: false,
-    completed: false
+  Interface.copyText = async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    const copied = document.execCommand('copy');
+    area.remove();
+    if (!copied) throw new Error('Clipboard copy failed');
+    return true;
   };
 
-  function safeParse(value, fallback) {
-    if (!value) return fallback;
-    try { return JSON.parse(value); } catch (_) { return fallback; }
+  function sanitizeFilename(value) {
+    const cleaned = String(value || '')
+      .trim()
+      .replace(/[\\/:*?"<>|]+/g, '_')
+      .replace(/\s+/g, '_')
+      .slice(0, 80);
+    return cleaned || '';
   }
+  Interface.sanitizeFilename = sanitizeFilename;
 
-  function readStorage(key, fallback) {
-    try { return safeParse(localStorage.getItem(key), fallback); } catch (_) { return fallback; }
-  }
-
-  function writeStorage(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (_) { return false; }
-  }
-
-  function removeStorage(key) {
-    try { localStorage.removeItem(key); } catch (_) { /* no-op */ }
-  }
-
-  function clampPage(value) {
-    const n = Number(value);
-    if (!Number.isFinite(n)) return 1;
-    return Math.min(CONFIG.totalPages, Math.max(1, Math.trunc(n)));
-  }
-
-  function announce(message) {
-    globalStatus.textContent = message;
-    window.clearTimeout(announce.timer);
-    announce.timer = window.setTimeout(() => { globalStatus.textContent = ''; }, 4500);
-  }
-
-  function restoreState() {
-    const nav = readStorage(KEYS.navigation, {});
-    const interactive = readStorage(KEYS.interactive, {});
-    const test = readStorage(KEYS.test, {});
-    const hashPage = /^#page-(\d+)$/.exec(window.location.hash)?.[1];
-    state.page = clampPage(hashPage || nav.page || 1);
-    state.maxVisited = clampPage(Math.max(nav.maxVisited || 1, state.page));
-    state.interactiveComplete = Boolean(interactive.complete);
-    state.testComplete = Boolean(test.complete);
-    state.completed = Boolean(readStorage(KEYS.completed, false));
-
-    if (state.page > CONFIG.interactivePage && !state.interactiveComplete) state.page = CONFIG.interactivePage;
-    if (state.page > CONFIG.assessmentPage && !state.testComplete) state.page = CONFIG.assessmentPage;
-  }
-
-  function saveNavigation() {
-    writeStorage(KEYS.navigation, { page: state.page, maxVisited: state.maxVisited });
-  }
-
-  function isNextAllowed() {
-    if (state.page === CONFIG.interactivePage && !state.interactiveComplete) return false;
-    if (state.page === CONFIG.assessmentPage && !state.testComplete) return false;
-    return state.page < CONFIG.finalPage;
-  }
-
-  function updateNavigation() {
-    const activePage = pages.find((page) => Number(page.dataset.page) === state.page);
-    pages.forEach((page) => page.classList.toggle('is-active', page === activePage));
-
-    const title = activePage?.dataset.title || '';
-    pageLabel.textContent = title;
-    bottomPageCount.textContent = `${state.page} / ${CONFIG.totalPages}`;
-
-    const progressBase = state.completed ? CONFIG.totalPages : Math.max(state.maxVisited, state.page);
-    const percent = Math.round((progressBase / CONFIG.totalPages) * 100);
-    progressBar.style.width = `${percent}%`;
-    progressTrack.setAttribute('aria-valuenow', String(percent));
-    progressText.textContent = state.completed ? 'Заняття завершено' : `Розділ ${state.page} із ${CONFIG.totalPages}`;
-    progressPercent.textContent = `${percent}%`;
-
-    prevButton.disabled = state.page === 1;
-    nextButton.disabled = !isNextAllowed();
-    nextButton.textContent = state.page === CONFIG.finalPage ? 'Заняття завершено' : 'Наступний розділ ➡️';
-
-    const newHash = `#page-${state.page}`;
-    if (window.location.hash !== newHash) history.replaceState(null, '', newHash);
-    saveNavigation();
-  }
-
-  function goToPage(page, { focus = true, announcePage = true } = {}) {
-    const target = clampPage(page);
-    if (target > CONFIG.interactivePage && !state.interactiveComplete) {
-      state.page = CONFIG.interactivePage;
-      announce('Спочатку правильно завершіть завдання з трьома ситуаціями.');
-    } else if (target > CONFIG.assessmentPage && !state.testComplete) {
-      state.page = CONFIG.assessmentPage;
-      announce('Спочатку правильно завершіть підсумковий тест.');
-    } else {
-      state.page = target;
-    }
-    state.maxVisited = Math.max(state.maxVisited, state.page);
-    if (state.page === CONFIG.finalPage && state.testComplete) {
-      state.completed = true;
-      writeStorage(KEYS.completed, true);
-    }
-    updateNavigation();
-    if (focus) {
-      const active = document.querySelector('.lesson-page.is-active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      window.setTimeout(() => active?.focus({ preventScroll: true }), 120);
-    }
-    if (announcePage) announce(`Відкрито розділ: ${pageLabel.textContent}.`);
-  }
-
-  prevButton.addEventListener('click', () => goToPage(state.page - 1));
-  nextButton.addEventListener('click', () => {
-    if (state.page === CONFIG.finalPage) return;
-    if (!isNextAllowed()) {
-      announce(state.page === CONFIG.interactivePage ? 'Завершіть завдання перед переходом.' : 'Завершіть підсумковий тест перед переходом.');
-      return;
-    }
-    goToPage(state.page + 1);
-  });
-
-  window.addEventListener('hashchange', () => {
-    const match = /^#page-(\d+)$/.exec(window.location.hash);
-    if (match) goToPage(Number(match[1]), { focus: false, announcePage: false });
-  });
-
-  resetProgressButton.addEventListener('click', () => {
-    const approved = window.confirm('Почати заняття спочатку? Буде очищено прогрес, відповіді у завданні та підсумковому тесті. Картка кліматично нейтральної візії громади залишиться збереженою.');
-    if (!approved) return;
-    [KEYS.navigation, KEYS.interactive, KEYS.test, KEYS.completed].forEach(removeStorage);
-    state.page = 1;
-    state.maxVisited = 1;
-    state.interactiveComplete = false;
-    state.testComplete = false;
-    state.completed = false;
-    resetInteractiveUI();
-    resetTestUI();
-    goToPage(1, { announcePage: false });
-    announce('Прогрес і відповіді очищено. Картку збережено.');
-  });
-
-  // Interactive component
-  const interactivePanels = [...document.querySelectorAll('.interactive-panel')];
-  const interactiveGateNote = document.getElementById('interactive-gate-note');
-  const interactiveAnswers = { 1: 'B', 2: 'C', 3: 'D' };
-  const interactiveFeedback = {
-    1: 'Основна концепція — NBS. Кліматична стійкість підтримує логіку цього рішення.',
-    2: 'Основна концепція — циркулярна економіка: рішення змінює ресурсну та життєву логіку закупівель.',
-    3: 'Основна концепція — city vision: рішення задає напрям і критерії майбутніх дій.'
-  };
-
-  function showInteractivePanel(id) {
-    interactivePanels.forEach((panel) => panel.classList.toggle('is-visible', panel.id === id));
-    const visible = document.getElementById(id);
-    visible?.querySelector('button, input')?.focus();
-  }
-
-  function persistInteractive() {
-    const answers = {};
-    [1,2,3].forEach((n) => {
-      answers[n] = document.querySelector(`input[name="scenario-${n}"]:checked`)?.value || '';
-    });
-    writeStorage(KEYS.interactive, { answers, complete: state.interactiveComplete });
-  }
-
-  function restoreInteractive() {
-    const stored = readStorage(KEYS.interactive, { answers: {}, complete: false });
-    state.interactiveComplete = Boolean(stored.complete);
-    Object.entries(stored.answers || {}).forEach(([n, value]) => {
-      const input = document.querySelector(`input[name="scenario-${n}"][value="${value}"]`);
-      if (input) input.checked = true;
-    });
-    if (state.interactiveComplete) {
-      [1,2,3].forEach((n) => {
-        const feedback = document.getElementById(`scenario-feedback-${n}`);
-        const next = document.querySelector(`.scenario-next[data-next="${n === 3 ? 'summary' : n + 1}"]`);
-        feedback.textContent = interactiveFeedback[n];
-        feedback.className = 'feedback is-success';
-        if (next) next.hidden = false;
-      });
-      interactiveGateNote.textContent = 'Завдання завершено. Перехід до наступного розділу відкрито.';
-      interactiveGateNote.classList.add('is-complete');
-    }
-  }
-
-  function resetInteractiveUI() {
-    document.querySelectorAll('#interactive input[type="radio"]').forEach((input) => { input.checked = false; });
-    document.querySelectorAll('#interactive .feedback').forEach((node) => { node.textContent = ''; node.className = 'feedback'; });
-    document.querySelectorAll('#interactive .scenario-next').forEach((button) => { button.hidden = true; });
-    showInteractivePanel('interactive-start');
-    interactiveGateNote.textContent = 'Щоб перейти далі, правильно завершіть усі три ситуації.';
-    interactiveGateNote.classList.remove('is-complete');
-    nextButton.disabled = state.page === CONFIG.interactivePage;
-  }
-
-  document.getElementById('interactive-start-button').addEventListener('click', () => showInteractivePanel('scenario-step-1'));
-  document.querySelectorAll('.scenario-check').forEach((button) => {
-    button.addEventListener('click', () => {
-      const n = Number(button.dataset.scenario);
-      const selected = document.querySelector(`input[name="scenario-${n}"]:checked`)?.value;
-      const feedback = document.getElementById(`scenario-feedback-${n}`);
-      const next = button.parentElement.querySelector('.scenario-next');
-      if (!selected) {
-        feedback.textContent = 'Оберіть одну концепцію.';
-        feedback.className = 'feedback is-error';
-        return;
-      }
-      if (selected === interactiveAnswers[n]) {
-        feedback.textContent = interactiveFeedback[n];
-        feedback.className = 'feedback is-success';
-        next.hidden = false;
-        if (n === 3) {
-          state.interactiveComplete = true;
-          interactiveGateNote.textContent = 'Завдання завершено. Перехід до наступного розділу відкрито.';
-          interactiveGateNote.classList.add('is-complete');
-          updateNavigation();
-        }
-      } else {
-        feedback.textContent = n === 1 && selected === 'A'
-          ? 'Кліматична стійкість підтримує рішення, але основна концепція тут — NBS. Спробуйте ще раз.'
-          : 'Ця концепція не є основною для описаного рішення. Перегляньте управлінську логіку і спробуйте ще раз.';
-        feedback.className = 'feedback is-error';
-        next.hidden = true;
-      }
-      persistInteractive();
-    });
-  });
-  document.querySelectorAll('.scenario-next').forEach((button) => {
-    button.addEventListener('click', () => {
-      const target = button.dataset.next;
-      showInteractivePanel(target === 'summary' ? 'interactive-summary' : `scenario-step-${target}`);
-    });
-  });
-  document.getElementById('interactive-reset').addEventListener('click', () => {
-    state.interactiveComplete = false;
-    removeStorage(KEYS.interactive);
-    resetInteractiveUI();
-    updateNavigation();
-  });
-
-  // Portfolio and learner persistence
-  const portfolioForm = document.getElementById('portfolio-form');
-  const portfolioStatus = document.getElementById('portfolio-status');
-  const portfolioFieldNames = ['communityName','mainChallenge','desiredState','resilienceRole','nbsRole','circularLoss','principles','firstSignal'];
-  const portfolioLabels = {
-    communityName: 'Назва громади',
-    mainChallenge: 'Головний кліматичний виклик із попереднього заняття',
-    desiredState: 'Якою громадою ми хочемо стати?',
-    resilienceRole: 'Що означає кліматична стійкість для цієї візії?',
-    nbsRole: 'Яку роль можуть відіграти природоорієнтовані рішення?',
-    circularLoss: 'Яку ресурсну втрату має зменшити циркулярна економіка?',
-    principles: 'Які 3 принципи мають пройти через майбутні рішення?',
-    firstSignal: 'Який перший управлінський сигнал можна дати команді?'
-  };
-
-  function getPortfolioData() {
-    return Object.fromEntries(portfolioFieldNames.map((name) => [name, portfolioForm.elements[name].value.trim()]));
-  }
-
-  function savePortfolio({ announceResult = true } = {}) {
-    const data = getPortfolioData();
-    const ok = writeStorage(KEYS.portfolio, data);
-    if (announceResult) {
-      portfolioStatus.textContent = ok ? 'Картку збережено у цьому браузері.' : 'Не вдалося зберегти картку у браузері. Завантажте PDF або скопіюйте відповіді.';
-      portfolioStatus.className = ok ? 'form-status is-success' : 'form-status is-error';
-    }
-    return data;
-  }
-
-  function restorePortfolio() {
-    const data = readStorage(KEYS.portfolio, {});
-    portfolioFieldNames.forEach((name) => {
-      if (typeof data[name] === 'string') portfolioForm.elements[name].value = data[name];
-    });
-  }
-
-  portfolioForm.addEventListener('input', () => savePortfolio({ announceResult: false }));
-  portfolioForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    savePortfolio();
-  });
-
-  document.getElementById('clear-portfolio').addEventListener('click', () => {
-    const approved = window.confirm('Очистити всі вісім полів Картки кліматично нейтральної візії громади? Цю дію не можна скасувати.');
-    if (!approved) return;
-    portfolioForm.reset();
-    removeStorage(KEYS.portfolio);
-    portfolioStatus.textContent = 'Картку очищено.';
-    portfolioStatus.className = 'form-status is-success';
-  });
-
-  // Direct local PDF generation using browser canvas rendering and an embedded-image PDF container.
-  function wrapText(ctx, text, maxWidth) {
-    const paragraphs = String(text || '').split(/\n+/);
+  function wrapCanvasText(context, text, maxWidth) {
+    const value = String(text || '—').replace(/\r\n?/g, '\n');
+    const paragraphs = value.split('\n');
     const lines = [];
-    paragraphs.forEach((paragraph, pIndex) => {
-      const words = paragraph.trim().split(/\s+/).filter(Boolean);
-      if (!words.length) { lines.push(''); return; }
-      let line = words.shift();
-      words.forEach((word) => {
-        const test = `${line} ${word}`;
-        if (ctx.measureText(test).width <= maxWidth) line = test;
-        else { lines.push(line); line = word; }
-      });
-      lines.push(line);
-      if (pIndex < paragraphs.length - 1) lines.push('');
+    paragraphs.forEach((paragraph, paragraphIndex) => {
+      const words = paragraph.split(/\s+/).filter(Boolean);
+      if (!words.length) lines.push('');
+      else {
+        let line = '';
+        words.forEach(word => {
+          const candidate = line ? `${line} ${word}` : word;
+          if (context.measureText(candidate).width <= maxWidth) { line = candidate; return; }
+          if (line) lines.push(line);
+          if (context.measureText(word).width <= maxWidth) { line = word; return; }
+          let fragment = '';
+          Array.from(word).forEach(character => {
+            const next = fragment + character;
+            if (context.measureText(next).width > maxWidth && fragment) {
+              lines.push(fragment);
+              fragment = character;
+            } else fragment = next;
+          });
+          line = fragment;
+        });
+        if (line) lines.push(line);
+      }
+      if (paragraphIndex < paragraphs.length - 1) lines.push('');
     });
     return lines;
   }
 
-  function createCanvasPage(pageNumber) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1240;
-    canvas.height = 1754;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#0b2d4d';
-    ctx.font = '700 28px Arial, sans-serif';
-    ctx.fillText('UCAN · Портфель мера', 90, 78);
-    ctx.fillStyle = '#52616e';
-    ctx.font = '24px Arial, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(`Сторінка ${pageNumber}`, 1150, 78);
-    ctx.textAlign = 'left';
-    ctx.strokeStyle = '#d7dee5';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(90, 102); ctx.lineTo(1150, 102); ctx.stroke();
-    return { canvas, ctx, y: 150 };
-  }
+  function createPdfCanvases({ title, label = 'Портфель мера', fields, data, note }) {
+    const width = 1240;
+    const height = 1754;
+    const margin = 92;
+    const maxWidth = width - margin * 2;
+    const bottom = height - margin;
+    const canvases = [];
+    let canvas;
+    let context;
+    let y;
 
-  function renderPortfolioCanvases(data) {
-    const pagesOut = [];
-    let page = createCanvasPage(1);
-    const marginX = 90;
-    const maxWidth = 1060;
-    const bottom = 1660;
-
-    function finishPage() {
-      pagesOut.push(page.canvas);
-      page = createCanvasPage(pagesOut.length + 1);
+    function newPage() {
+      canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      context = canvas.getContext('2d', { alpha: false });
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, width, height);
+      canvases.push(canvas);
+      y = margin;
     }
-
-    function drawLines(lines, lineHeight, font, color, gapAfter = 0) {
-      page.ctx.font = font;
-      page.ctx.fillStyle = color;
+    function ensureSpace(required) { if (y + required > bottom) newPage(); }
+    function drawText(text, options = {}) {
+      const fontSize = options.fontSize || 28;
+      const lineHeight = options.lineHeight || Math.round(fontSize * 1.42);
+      const weight = options.weight || 400;
+      const color = options.color || '#1f2a33';
+      const gapAfter = options.gapAfter ?? 18;
+      context.font = `${weight} ${fontSize}px Arial, "DejaVu Sans", sans-serif`;
+      context.fillStyle = color;
+      const lines = wrapCanvasText(context, text, options.maxWidth || maxWidth);
       for (const line of lines) {
-        if (page.y + lineHeight > bottom) finishPage();
-        page.ctx.fillText(line, marginX, page.y);
-        page.y += lineHeight;
+        ensureSpace(lineHeight + gapAfter);
+        if (line) context.fillText(line, margin, y);
+        y += lineHeight;
       }
-      page.y += gapAfter;
+      y += gapAfter;
     }
 
-    page.ctx.fillStyle = '#0b2d4d';
-    page.ctx.font = '700 42px Arial, sans-serif';
-    const titleLines = wrapText(page.ctx, 'Картка кліматично нейтральної візії громади', maxWidth);
-    drawLines(titleLines, 54, '700 42px Arial, sans-serif', '#0b2d4d', 18);
-    drawLines(['Це перша чернетка бачення, а не стратегія або план дій.'], 38, '26px Arial, sans-serif', '#52616e', 26);
-
-    for (const name of portfolioFieldNames) {
-      page.ctx.font = '700 27px Arial, sans-serif';
-      const labelLines = wrapText(page.ctx, portfolioLabels[name], maxWidth);
-      const value = data[name] || 'Не заповнено';
-      page.ctx.font = '27px Arial, sans-serif';
-      const valueLines = wrapText(page.ctx, value, maxWidth - 28);
-      const needed = labelLines.length * 38 + valueLines.length * 39 + 54;
-      if (page.y + needed > bottom) finishPage();
-      drawLines(labelLines, 38, '700 27px Arial, sans-serif', '#0b2d4d', 8);
-      page.ctx.fillStyle = '#f5f7f9';
-      const boxTop = page.y - 8;
-      const boxHeight = Math.max(64, valueLines.length * 39 + 24);
-      page.ctx.fillRect(marginX, boxTop, maxWidth, boxHeight);
-      page.ctx.strokeStyle = '#d7dee5';
-      page.ctx.strokeRect(marginX, boxTop, maxWidth, boxHeight);
-      page.y += 18;
-      drawLines(valueLines, 39, '27px Arial, sans-serif', '#18232d', 22);
+    newPage();
+    drawText(title, { fontSize: 42, lineHeight: 54, weight: 700, color: '#123f68', gapAfter: 10 });
+    drawText(label, { fontSize: 30, lineHeight: 40, weight: 700, color: '#2d7b55', gapAfter: 34 });
+    drawText('Локально створений навчальний артефакт. Дані не передавалися на сервер.', { fontSize: 22, lineHeight: 32, color: '#47545e', gapAfter: 32 });
+    fields.forEach(field => {
+      ensureSpace(110);
+      context.strokeStyle = '#cfd9df';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(margin, y);
+      context.lineTo(width - margin, y);
+      context.stroke();
+      y += 24;
+      drawText(field.label, { fontSize: 24, lineHeight: 34, weight: 700, color: '#123f68', gapAfter: 8 });
+      drawText((data[field.key] || '').trim() || '—', { fontSize: 24, lineHeight: 36, gapAfter: 28 });
+    });
+    if (note) {
+      ensureSpace(130);
+      context.strokeStyle = '#cfd9df';
+      context.beginPath();
+      context.moveTo(margin, y);
+      context.lineTo(width - margin, y);
+      context.stroke();
+      y += 24;
+      drawText('Примітка', { fontSize: 24, lineHeight: 34, weight: 700, color: '#123f68', gapAfter: 8 });
+      drawText(note, { fontSize: 22, lineHeight: 33, color: '#47545e', gapAfter: 0 });
     }
-    pagesOut.push(page.canvas);
-    return pagesOut;
+    return canvases;
   }
 
-  function dataUrlToBytes(dataUrl) {
-    const binary = atob(dataUrl.split(',')[1]);
+  function base64ToBytes(base64) {
+    const binary = window.atob(base64);
     const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
     return bytes;
   }
 
-  function concatBytes(chunks) {
-    const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-    const result = new Uint8Array(length);
-    let offset = 0;
-    chunks.forEach((chunk) => { result.set(chunk, offset); offset += chunk.length; });
-    return result;
-  }
-
   function buildImagePdf(canvases) {
-    const enc = new TextEncoder();
-    const images = canvases.map((canvas) => ({
-      width: canvas.width,
-      height: canvas.height,
-      bytes: dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.92))
-    }));
-    const objectCount = 2 + images.length * 3;
-    const offsets = new Array(objectCount + 1).fill(0);
+    const encoder = new TextEncoder();
     const chunks = [];
+    const offsets = [0];
     let length = 0;
-    const push = (value) => { const bytes = typeof value === 'string' ? enc.encode(value) : value; chunks.push(bytes); length += bytes.length; };
-    push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
-    const addObject = (n, bodyParts) => {
-      offsets[n] = length;
-      push(`${n} 0 obj\n`);
-      bodyParts.forEach(push);
-      push('\nendobj\n');
-    };
-    addObject(1, ['<< /Type /Catalog /Pages 2 0 R >>']);
-    const kids = images.map((_, i) => `${3 + i * 3} 0 R`).join(' ');
-    addObject(2, [`<< /Type /Pages /Kids [${kids}] /Count ${images.length} >>`]);
-    images.forEach((image, i) => {
-      const pageObj = 3 + i * 3;
-      const contentObj = pageObj + 1;
-      const imageObj = pageObj + 2;
-      addObject(pageObj, [`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im0 ${imageObj} 0 R >> >> /Contents ${contentObj} 0 R >>`]);
-      const content = enc.encode('q\n595 0 0 842 0 0 cm\n/Im0 Do\nQ\n');
-      addObject(contentObj, [`<< /Length ${content.length} >>\nstream\n`, content, '\nendstream']);
-      addObject(imageObj, [`<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${image.bytes.length} >>\nstream\n`, image.bytes, '\nendstream']);
+    const pushBytes = bytes => { chunks.push(bytes); length += bytes.length; };
+    const pushText = text => pushBytes(encoder.encode(text));
+    const images = canvases.map(canvas => {
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      return { width: canvas.width, height: canvas.height, bytes: base64ToBytes(dataUrl.split(',')[1]) };
+    });
+    const objectCount = 2 + images.length * 3;
+    const pageIds = images.map((_, index) => 3 + index * 3);
+    pushText('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+    function startObject(id) { offsets[id] = length; pushText(`${id} 0 obj\n`); }
+    function endObject() { pushText('endobj\n'); }
+    startObject(1); pushText('<< /Type /Catalog /Pages 2 0 R >>\n'); endObject();
+    startObject(2); pushText(`<< /Type /Pages /Count ${pageIds.length} /Kids [${pageIds.map(id => `${id} 0 R`).join(' ')}] >>\n`); endObject();
+    images.forEach((record, index) => {
+      const pageId = 3 + index * 3;
+      const contentId = pageId + 1;
+      const imageId = pageId + 2;
+      const imageName = `Im${index}`;
+      const content = `q\n595 0 0 842 0 0 cm\n/${imageName} Do\nQ\n`;
+      const contentBytes = encoder.encode(content);
+      startObject(pageId); pushText(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /${imageName} ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>\n`); endObject();
+      startObject(contentId); pushText(`<< /Length ${contentBytes.length} >>\nstream\n`); pushBytes(contentBytes); pushText('endstream\n'); endObject();
+      startObject(imageId); pushText(`<< /Type /XObject /Subtype /Image /Width ${record.width} /Height ${record.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${record.bytes.length} >>\nstream\n`); pushBytes(record.bytes); pushText('\nendstream\n'); endObject();
     });
     const xrefOffset = length;
-    push(`xref\n0 ${objectCount + 1}\n`);
-    push('0000000000 65535 f \n');
-    for (let i = 1; i <= objectCount; i += 1) push(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`);
-    push(`trailer\n<< /Size ${objectCount + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
-    return new Blob([concatBytes(chunks)], { type: 'application/pdf' });
+    pushText(`xref\n0 ${objectCount + 1}\n`);
+    pushText('0000000000 65535 f \n');
+    for (let id = 1; id <= objectCount; id += 1) pushText(`${String(offsets[id]).padStart(10, '0')} 00000 n \n`);
+    pushText(`trailer\n<< /Size ${objectCount + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+    return new Blob(chunks, { type: 'application/pdf' });
   }
 
-  function sanitizedFilenamePart(value) {
-    const cleaned = String(value || '').trim().replace(/[^\p{L}\p{N}_-]+/gu, '_').replace(/^_+|_+$/g, '');
-    return cleaned || 'Hromada';
-  }
-
-  document.getElementById('download-pdf').addEventListener('click', async (event) => {
-    const button = event.currentTarget;
-    button.disabled = true;
+  Interface.downloadPortfolioPdf = async function downloadPortfolioPdf({ button, status, title, label, filename, fields, data, note }) {
+    if (!button) throw new Error('PDF button is required');
     const original = button.textContent;
-    button.textContent = 'Готуємо PDF…';
-    portfolioStatus.textContent = 'Формуємо PDF локально у Вашому браузері.';
-    portfolioStatus.className = 'form-status';
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.textContent = 'Створення PDF…';
+    if (status) status.textContent = 'Створюємо PDF локально у Вашому браузері…';
     try {
-      const data = savePortfolio({ announceResult: false });
-      const canvases = renderPortfolioCanvases(data);
-      const pdf = buildImagePdf(canvases);
-      const url = URL.createObjectURL(pdf);
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      const canvases = createPdfCanvases({ title, label, fields, data, note });
+      const blob = buildImagePdf(canvases);
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `UCAN_Kartka_klimatychno_neitralnoi_vizii_${sanitizedFilenamePart(data.communityName)}.pdf`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-      portfolioStatus.textContent = 'PDF завантажено. Дані не передавалися назовні.';
-      portfolioStatus.className = 'form-status is-success';
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      if (status) status.textContent = 'PDF створено та завантажено. Дані залишилися у Вашому браузері.';
     } catch (error) {
-      console.error(error);
-      portfolioStatus.textContent = 'Не вдалося сформувати PDF. Збережіть картку і повторіть дію у сучасному браузері.';
-      portfolioStatus.className = 'form-status is-error';
+      console.error('Portfolio PDF generation failed', error);
+      if (status) status.textContent = 'Не вдалося створити PDF. Перевірте налаштування браузера та спробуйте ще раз.';
+      throw error;
     } finally {
       button.disabled = false;
+      button.removeAttribute('aria-busy');
       button.textContent = original;
     }
-  });
-
-  // AI prompt UX
-  const promptDialog = document.getElementById('prompt-dialog');
-  const promptPreview = document.getElementById('prompt-preview');
-  const copyStatus = document.getElementById('copy-status');
-  const dialogCopyStatus = document.getElementById('dialog-copy-status');
-  let promptInvoker = null;
-
-  function buildPrompt() {
-    const data = savePortfolio({ announceResult: false });
-    const lines = [
-      'Допоможіть управлінській команді громади перевірити чернетку кліматично нейтральної візії.',
-      'Не вигадуйте фактів про громаду і не переписуйте роботу замість учасника.',
-      'Проаналізуйте повноту, сильні сторони, слабкі місця та відсутні зв’язки між викликом, кліматичною стійкістю, природоорієнтованими рішеннями і циркулярною економікою.',
-      'Дайте структурований feedback простою управлінською мовою.',
-      ''
-    ];
-    portfolioFieldNames.forEach((name) => lines.push(`${portfolioLabels[name]}: ${data[name] || '[не заповнено]'}`));
-    return lines.join('\n');
-  }
-
-  async function copyText(text, statusNode) {
-    try {
-      if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text);
-      else {
-        const area = document.createElement('textarea');
-        area.value = text;
-        area.setAttribute('readonly', '');
-        area.style.position = 'fixed';
-        area.style.opacity = '0';
-        document.body.appendChild(area);
-        area.select();
-        const ok = document.execCommand('copy');
-        area.remove();
-        if (!ok) throw new Error('copy failed');
-      }
-      statusNode.textContent = 'Скопійовано';
-      statusNode.className = 'form-status is-success';
-      return true;
-    } catch (_) {
-      statusNode.textContent = 'Не вдалося скопіювати автоматично. Відкрийте перегляд і скопіюйте текст вручну.';
-      statusNode.className = 'form-status is-error';
-      return false;
-    }
-  }
-
-  document.getElementById('preview-prompt').addEventListener('click', (event) => {
-    promptInvoker = event.currentTarget;
-    promptPreview.value = buildPrompt();
-    dialogCopyStatus.textContent = '';
-    dialogCopyStatus.className = 'form-status';
-    if (typeof promptDialog.showModal === 'function') promptDialog.showModal();
-    else {
-      promptDialog.setAttribute('open', '');
-      promptDialog.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    window.setTimeout(() => promptPreview.focus(), 50);
-  });
-  promptDialog.addEventListener('close', () => promptInvoker?.focus());
-  document.getElementById('copy-prompt').addEventListener('click', () => copyText(buildPrompt(), copyStatus));
-  document.getElementById('copy-from-dialog').addEventListener('click', () => copyText(promptPreview.value, dialogCopyStatus));
-
-  // Final test
-  const testForm = document.getElementById('final-test');
-  const testResult = document.getElementById('test-result');
-  const testGateNote = document.getElementById('test-gate-note');
-  const testAnswers = { q1: 'B', q2: 'C', q3: 'B', q4: 'C', q5: 'C' };
-  const explanations = {
-    q1: 'Стійкість означає здатність громади підтримувати послуги й якість життя попри ризики, а не лише реагувати після аварій.',
-    q2: 'NBS мають управлінську цінність тоді, коли працюють як частина інфраструктури та зменшують ризики.',
-    q3: 'Циркулярність пов’язує ресурси, витрати, відновлення, закупівлі та місцеву економіку.',
-    q4: 'Візія має допомагати приймати рішення, а не бути лише лозунгом або списком проєктів.',
-    q5: 'Мер має перевірити управлінську логіку рішення: проблема, вплив, відповідальність, бюджет і зв’язок із візією.'
   };
 
-  function getTestSelections() {
-    return Object.fromEntries(Object.keys(testAnswers).map((name) => [name, testForm.elements[name].value || '']));
+  window.UCANInterface = Object.freeze(Interface);
+})();
+
+/* Lesson 02 Gold Release runtime — Candidate B with controlled Candidate A architecture merge. */
+(() => {
+  'use strict';
+
+  const TOTAL_PAGES = 10;
+  const PAGE_KEY = 'ucan_l02_progress_v1';
+  const FORM_KEY = 'ucan_l02_portfolio_v1';
+  const TEST_KEY = 'ucan_l02_test_v2';
+  const SCENARIO_KEY = 'ucan_l02_scenarios_v2';
+  const MAX_PAGE_KEY = 'ucan_l02_max_page_v2';
+  const COMPLETED_KEY = 'ucan_l02_completed_v2';
+  const CASE_KEY = 'ucan_l02_case_notes_v1';
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
+
+  const safeStorage = {
+    get(key) {
+      try { return window.localStorage.getItem(key); } catch (error) { return null; }
+    },
+    set(key, value) {
+      try { window.localStorage.setItem(key, value); return true; } catch (error) { return false; }
+    },
+    remove(key) {
+      try { window.localStorage.removeItem(key); return true; } catch (error) { return false; }
+    }
+  };
+
+  const pages = [...document.querySelectorAll('.lesson-page')];
+  const pageLinks = [...document.querySelectorAll('[data-page-link]')];
+  const prevPageButton = document.getElementById('previous-page');
+  const nextPageButton = document.getElementById('next-page');
+  const progressText = document.getElementById('progress-text');
+  const progressPercent = document.getElementById('progress-percent');
+  const progressBar = document.getElementById('progress-bar');
+  const progressTrack = document.getElementById('progress-track');
+  const pageLabel = document.getElementById('page-label');
+  const navPageCount = document.getElementById('nav-page-count');
+  const globalStatus = document.getElementById('global-status');
+  const tocToggle = document.querySelector('.toc-toggle');
+  const tocList = document.getElementById('toc-list');
+  let currentPage = 1;
+  let testPassed = safeStorage.get(TEST_KEY) === 'passed';
+  let maxVisited = Math.min(TOTAL_PAGES, Math.max(1, Number.parseInt(safeStorage.get(MAX_PAGE_KEY) || safeStorage.get(PAGE_KEY) || '1', 10) || 1));
+  let lessonCompleted = safeStorage.get(COMPLETED_KEY) === 'true';
+  let pendingScenarioTarget = 7;
+
+  const normalizePage = (value) => {
+    const number = Number.parseInt(value, 10);
+    if (!Number.isFinite(number)) return 1;
+    return Math.min(TOTAL_PAGES, Math.max(1, number));
+  };
+
+  const pageFromHash = () => {
+    const match = window.location.hash.match(/^#page-(\d+)$/);
+    return match ? normalizePage(match[1]) : null;
+  };
+
+  function updateTestGate() {
+    const finalLink = document.querySelector('[data-requires-test="true"]');
+    if (!finalLink) return;
+    finalLink.setAttribute('aria-disabled', testPassed ? 'false' : 'true');
+    finalLink.title = testPassed ? '' : 'Спочатку правильно виконайте підсумковий тест.';
   }
 
-  function persistTest() {
-    writeStorage(KEYS.test, { selections: getTestSelections(), complete: state.testComplete });
-  }
-
-  function restoreTest() {
-    const stored = readStorage(KEYS.test, { selections: {}, complete: false });
-    state.testComplete = Boolean(stored.complete);
-    Object.entries(stored.selections || {}).forEach(([name, value]) => {
-      const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
-      if (input) input.checked = true;
-    });
-    if (state.testComplete) {
-      testResult.textContent = 'Усі відповіді правильні. Підсумковий розділ відкрито.';
-      testResult.className = 'test-result is-success';
-      testGateNote.textContent = 'Підсумковий тест завершено. Перехід до підсумку відкрито.';
-      testGateNote.classList.add('is-complete');
-      Object.keys(testAnswers).forEach((name) => {
-        const feedback = document.getElementById(`${name}-feedback`);
-        feedback.textContent = explanations[name];
-        feedback.className = 'question-feedback is-success';
-      });
+  function scenarioState() {
+    const fallback = { selected: {}, completed: [] };
+    const raw = safeStorage.get(SCENARIO_KEY);
+    if (!raw) return fallback;
+    try {
+      const parsed = JSON.parse(raw);
+      return {
+        selected: parsed && typeof parsed.selected === 'object' ? parsed.selected : {},
+        completed: Array.isArray(parsed && parsed.completed) ? parsed.completed.map(Number).filter(Number.isFinite) : []
+      };
+    } catch (error) {
+      safeStorage.remove(SCENARIO_KEY);
+      return fallback;
     }
   }
 
-  function resetTestUI() {
-    testForm.reset();
-    document.querySelectorAll('.question-feedback').forEach((node) => { node.textContent = ''; node.className = 'question-feedback'; });
-    testResult.textContent = '';
-    testResult.className = 'test-result';
-    testGateNote.textContent = 'Щоб перейти до підсумку, правильно дайте відповідь на всі п’ять запитань.';
-    testGateNote.classList.remove('is-complete');
+  let storedScenarioState = scenarioState();
+  const completedScenarios = new Set(storedScenarioState.completed);
+
+  function scenarioIsComplete() {
+    return completedScenarios.size === 3;
   }
 
-  testForm.addEventListener('change', persistTest);
-  testForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const selections = getTestSelections();
-    const missing = Object.values(selections).filter((value) => !value).length;
-    if (missing) {
-      testResult.textContent = `Дайте відповідь на всі запитання. Залишилося: ${missing}.`;
-      testResult.className = 'test-result is-error';
+  function shouldOfferScenarioCheckpoint(targetPage) {
+    return currentPage === 6 && targetPage > 6 && !scenarioIsComplete();
+  }
+
+  function showScenarioCheckpoint(targetPage) {
+    const panel = document.getElementById('scenario-gate');
+    const text = document.getElementById('scenario-gate-text');
+    if (!panel) return false;
+    pendingScenarioTarget = normalizePage(targetPage);
+    const remaining = 3 - completedScenarios.size;
+    text.textContent = `Залишилося виконати ${remaining} ${remaining === 1 ? 'ситуацію' : 'ситуації'}. Завершіть усі три ситуації, щоб перейти далі.`;
+    panel.hidden = false;
+    panel.scrollIntoView({ behavior: scrollBehavior, block: 'center' });
+    const stayButton = document.getElementById('scenario-stay');
+    if (stayButton) stayButton.focus({ preventScroll: true });
+    return true;
+  }
+
+  function hideScenarioCheckpoint() {
+    const panel = document.getElementById('scenario-gate');
+    if (panel) panel.hidden = true;
+  }
+
+  function showPage(pageNumber, options = {}) {
+    const requested = normalizePage(pageNumber);
+
+    if (requested === 10 && !testPassed && options.allowLocked !== true) {
+      showPage(9, { replace: true, focus: true, allowLocked: true, bypassScenarioCheckpoint: true });
+      const testStatus = document.getElementById('test-status');
+      if (testStatus) {
+        testStatus.textContent = 'Щоб перейти до підсумку, правильно виконайте всі п’ять питань.';
+        testStatus.className = 'feedback is-incorrect';
+      }
       return;
     }
-    let correct = 0;
-    Object.keys(testAnswers).forEach((name) => {
-      const isCorrect = selections[name] === testAnswers[name];
-      if (isCorrect) correct += 1;
-      const feedback = document.getElementById(`${name}-feedback`);
-      feedback.textContent = explanations[name];
-      feedback.className = isCorrect ? 'question-feedback is-success' : 'question-feedback is-error';
-    });
-    state.testComplete = correct === Object.keys(testAnswers).length;
-    if (state.testComplete) {
-      testResult.textContent = 'Усі відповіді правильні. Підсумковий розділ відкрито.';
-      testResult.className = 'test-result is-success';
-      testGateNote.textContent = 'Підсумковий тест завершено. Перехід до підсумку відкрито.';
-      testGateNote.classList.add('is-complete');
-      announce('Підсумковий тест завершено.');
-    } else {
-      testResult.textContent = `Правильних відповідей: ${correct} із 5. Перегляньте пояснення і спробуйте ще раз.`;
-      testResult.className = 'test-result is-error';
-      testGateNote.textContent = 'Щоб перейти до підсумку, правильно дайте відповідь на всі п’ять запитань.';
-      testGateNote.classList.remove('is-complete');
+
+    if (!options.bypassScenarioCheckpoint && shouldOfferScenarioCheckpoint(requested)) {
+      showScenarioCheckpoint(requested);
+      return;
     }
-    persistTest();
-    updateNavigation();
+
+    currentPage = requested;
+    maxVisited = Math.max(maxVisited, currentPage);
+    if (currentPage === TOTAL_PAGES && testPassed) {
+      lessonCompleted = true;
+      safeStorage.set(COMPLETED_KEY, 'true');
+      document.body.classList.add('is-completed');
+    }
+    safeStorage.set(MAX_PAGE_KEY, String(maxVisited));
+    pages.forEach((page) => page.classList.toggle('is-active', Number(page.dataset.page) === currentPage));
+    pageLinks.forEach((link) => {
+      const active = Number(link.dataset.pageLink) === currentPage;
+      if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
+    });
+
+    const percent = lessonCompleted ? 100 : Math.round((maxVisited / TOTAL_PAGES) * 100);
+    progressText.textContent = lessonCompleted ? 'Заняття завершено' : `Сторінка ${currentPage} з ${TOTAL_PAGES}`;
+    if (progressPercent) progressPercent.textContent = `${percent}%`;
+    progressBar.style.width = `${percent}%`;
+    progressTrack.setAttribute('aria-valuenow', String(percent));
+    progressTrack.setAttribute('aria-valuetext', lessonCompleted ? 'Заняття завершено, прогрес 100%' : `Сторінка ${currentPage} з ${TOTAL_PAGES}, прогрес ${percent}%`);
+    prevPageButton.disabled = currentPage === 1;
+    nextPageButton.disabled = currentPage === TOTAL_PAGES || (currentPage === 9 && !testPassed);
+    nextPageButton.textContent = currentPage === 9 && !testPassed ? 'Спочатку виконайте тест' : currentPage === TOTAL_PAGES ? 'Заняття завершено' : 'Наступний розділ ➡️';
+    if (pageLabel) { const active = pages[currentPage - 1]; pageLabel.textContent = active?.dataset.pageLabel || ''; }
+    if (navPageCount) navPageCount.textContent = `${currentPage} / ${TOTAL_PAGES}`;
+
+    safeStorage.set(PAGE_KEY, String(currentPage));
+    const hash = `#page-${currentPage}`;
+    if (window.location.hash !== hash) {
+      if (options.replace) history.replaceState({ page: currentPage }, '', hash);
+      else history.pushState({ page: currentPage }, '', hash);
+    }
+
+    if (options.focus !== false) {
+      const activeHeading = document.querySelector(`#page-${currentPage} h1`);
+      if (activeHeading) {
+        activeHeading.setAttribute('tabindex', '-1');
+        activeHeading.focus({ preventScroll: true });
+        activeHeading.scrollIntoView({ block: 'start', behavior: scrollBehavior });
+      }
+    }
+    if (tocList) tocList.classList.remove('is-open');
+    if (tocToggle) tocToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  pageLinks.forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (link.dataset.requiresTest === 'true' && !testPassed) {
+        showPage(9, { focus: true, bypassScenarioCheckpoint: true });
+        return;
+      }
+      showPage(link.dataset.pageLink, { focus: true });
+    });
   });
 
-  // Initialization order preserves learner work before AI prompt generation.
-  restoreState();
+  prevPageButton.addEventListener('click', () => showPage(currentPage - 1, { focus: true, bypassScenarioCheckpoint: true }));
+  nextPageButton.addEventListener('click', () => showPage(currentPage + 1, { focus: true }));
+  if (tocToggle && tocList) tocToggle.addEventListener('click', () => {
+    const open = tocList.classList.toggle('is-open');
+    tocToggle.setAttribute('aria-expanded', String(open));
+  });
+  window.addEventListener('popstate', () => showPage(pageFromHash() || 1, { replace: true, focus: false }));
+
+  const stayButton = document.getElementById('scenario-stay');
+  if (stayButton) {
+    stayButton.addEventListener('click', () => {
+      hideScenarioCheckpoint();
+      const currentScenario = document.querySelector('.scenario.is-current legend');
+      if (currentScenario) {
+        currentScenario.setAttribute('tabindex', '-1');
+        currentScenario.focus();
+      }
+    });
+  }
+
+  // Practice-oriented case notes.
+  const caseFields = ['case-example', 'case-problem', 'case-principle', 'case-local-decision']
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  const caseTransferButton = document.getElementById('case-transfer');
+  const caseTransferStatus = document.getElementById('case-transfer-status');
+
+  function caseDataObject() {
+    return Object.fromEntries(caseFields.map((field) => [field.id, field.value]));
+  }
+
+  function restoreCaseNotes() {
+    const raw = safeStorage.get(CASE_KEY);
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw);
+      caseFields.forEach((field) => {
+        if (typeof data[field.id] === 'string') field.value = data[field.id];
+      });
+    } catch (error) {
+      safeStorage.remove(CASE_KEY);
+    }
+  }
+
+  caseFields.forEach((field) => field.addEventListener('input', () => safeStorage.set(CASE_KEY, JSON.stringify(caseDataObject()))));
+  caseFields.forEach((field) => field.addEventListener('change', () => safeStorage.set(CASE_KEY, JSON.stringify(caseDataObject()))));
+
+  const transferDialog = document.getElementById('portfolio-transfer-dialog');
+  const transferExisting = document.getElementById('portfolio-transfer-existing');
+  const transferIncoming = document.getElementById('portfolio-transfer-incoming');
+  const transferMergeButton = document.getElementById('portfolio-transfer-merge');
+  const transferReplaceButton = document.getElementById('portfolio-transfer-replace');
+  const transferCancelButtons = [document.getElementById('portfolio-transfer-cancel'), document.getElementById('portfolio-transfer-cancel-top')].filter(Boolean);
+  let pendingCaseTransfer = null;
+
+  function appendManagementSignal(decision, example) {
+    const managementSignal = document.getElementById('management-signal');
+    if (!decision || !managementSignal) return;
+    const prefix = example ? `Орієнтир: ${example}. ` : '';
+    const addition = `${prefix}${decision}`;
+    const existing = managementSignal.value.trim();
+    if (!existing) managementSignal.value = addition;
+    else if (!existing.includes(addition)) managementSignal.value = `${existing}
+${addition}`;
+  }
+
+  function finishCaseTransfer({ principle, decision, example, targetField = null, strategy = 'set' }) {
+    if (principle && targetField) {
+      const existing = targetField.value.trim();
+      if (strategy === 'merge' && existing && !existing.includes(principle)) targetField.value = `${existing}; ${principle}`;
+      else if (strategy === 'replace' || !existing) targetField.value = principle;
+    }
+    appendManagementSignal(decision, example);
+    savePortfolioSilently();
+    if (!portfolioSummary.hidden) renderPortfolioSummary();
+    caseTransferStatus.textContent = 'Підказки перенесено до практичної картки без втрати вже введених відповідей.';
+    caseTransferStatus.className = 'feedback is-correct';
+    pendingCaseTransfer = null;
+    if (transferDialog?.open) transferDialog.close();
+    showPage(8, { focus: true, bypassScenarioCheckpoint: true });
+  }
+
+  if (caseTransferButton) {
+    caseTransferButton.addEventListener('click', () => {
+      const principle = document.getElementById('case-principle').value.trim();
+      const decision = document.getElementById('case-local-decision').value.trim();
+      const example = document.getElementById('case-example').value.trim();
+      if (!principle && !decision) {
+        caseTransferStatus.textContent = 'Запишіть хоча б принцип або рішення, яке варто перевірити.';
+        caseTransferStatus.className = 'feedback is-incorrect';
+        return;
+      }
+      const principleFields = [document.getElementById('principle-1'), document.getElementById('principle-2'), document.getElementById('principle-3')].filter(Boolean);
+      const emptyField = principleFields.find((field) => !field.value.trim());
+      if (!principle || emptyField) {
+        finishCaseTransfer({ principle, decision, example, targetField: emptyField || null });
+        return;
+      }
+      pendingCaseTransfer = { principle, decision, example, targetField: principleFields[0] };
+      transferExisting.textContent = principleFields[0].value.trim();
+      transferIncoming.textContent = principle;
+      transferDialog.showModal();
+      transferMergeButton.focus();
+    });
+  }
+  transferMergeButton?.addEventListener('click', () => pendingCaseTransfer && finishCaseTransfer({ ...pendingCaseTransfer, strategy: 'merge' }));
+  transferReplaceButton?.addEventListener('click', () => pendingCaseTransfer && finishCaseTransfer({ ...pendingCaseTransfer, strategy: 'replace' }));
+  transferCancelButtons.forEach((button) => button.addEventListener('click', () => transferDialog.close()));
+  transferDialog?.addEventListener('close', () => caseTransferButton?.focus());
+  transferDialog?.addEventListener('click', (event) => { if (event.target === transferDialog) transferDialog.close(); });
+  restoreCaseNotes();
+
+  // Interactive concept matching.
+  const scenarios = [...document.querySelectorAll('.scenario')];
+  const scenarioProgress = document.getElementById('scenario-progress');
+  const scenarioCompletion = document.getElementById('scenario-completion');
+  const scenarioFeedback = document.getElementById('scenario-feedback');
+  const scenarioPrev = document.getElementById('scenario-prev');
+  const scenarioNext = document.getElementById('scenario-next');
+  const scenarioCheck = document.getElementById('scenario-check');
+  let scenarioIndex = 0;
+  const scenarioAnswers = ['B', 'C', 'D'];
+  const scenarioMessages = [
+    'Правильно. Основна концепція — природоорієнтовані рішення. Кліматична стійкість також підтримує логіку цього рішення.',
+    'Правильно. Це циркулярна економіка: рішення змінює ресурсну та життєциклову логіку закупівель.',
+    'Правильно. Це візія громади: рішення задає бажаний напрям і критерії для майбутніх дій.'
+  ];
+
+  function persistScenarioState() {
+    const selected = {};
+    scenarios.forEach((scenario, index) => {
+      const checked = scenario.querySelector(`input[name="scenario-${index + 1}"]:checked`);
+      if (checked) selected[index + 1] = checked.value;
+    });
+    safeStorage.set(SCENARIO_KEY, JSON.stringify({ selected, completed: [...completedScenarios] }));
+  }
+
+  function updateScenarioCompletion() {
+    scenarioCompletion.textContent = `Виконано ${completedScenarios.size} із ${scenarios.length}`;
+    if (scenarioIsComplete()) {
+      hideScenarioCheckpoint();
+    }
+  }
+
+  function renderScenario() {
+    scenarios.forEach((scenario, index) => scenario.classList.toggle('is-current', index === scenarioIndex));
+    scenarioProgress.textContent = `Ситуація ${scenarioIndex + 1} з ${scenarios.length}`;
+    scenarioPrev.disabled = scenarioIndex === 0;
+    scenarioNext.disabled = scenarioIndex === scenarios.length - 1;
+    if (completedScenarios.has(scenarioIndex + 1)) {
+      scenarioFeedback.textContent = scenarioMessages[scenarioIndex];
+      scenarioFeedback.className = 'feedback is-correct';
+    } else {
+      scenarioFeedback.textContent = '';
+      scenarioFeedback.className = 'feedback';
+    }
+    updateScenarioCompletion();
+  }
+
+  scenarios.forEach((scenario, index) => {
+    const selectedValue = storedScenarioState.selected[index + 1];
+    if (selectedValue) {
+      const input = scenario.querySelector(`input[value="${selectedValue}"]`);
+      if (input) input.checked = true;
+    }
+    scenario.querySelectorAll('input[type="radio"]').forEach((input) => input.addEventListener('change', persistScenarioState));
+  });
+
+  scenarioPrev.addEventListener('click', () => { scenarioIndex = Math.max(0, scenarioIndex - 1); renderScenario(); });
+  scenarioNext.addEventListener('click', () => { scenarioIndex = Math.min(scenarios.length - 1, scenarioIndex + 1); renderScenario(); });
+  scenarioCheck.addEventListener('click', () => {
+    const selected = document.querySelector(`input[name="scenario-${scenarioIndex + 1}"]:checked`);
+    if (!selected) {
+      scenarioFeedback.textContent = 'Оберіть одну концепцію, а потім натисніть «Перевірити відповідь».';
+      scenarioFeedback.className = 'feedback is-incorrect';
+      return;
+    }
+    const correct = selected.value === scenarioAnswers[scenarioIndex];
+    if (correct) completedScenarios.add(scenarioIndex + 1);
+    else completedScenarios.delete(scenarioIndex + 1);
+    persistScenarioState();
+    updateScenarioCompletion();
+    scenarioFeedback.textContent = correct ? scenarioMessages[scenarioIndex] : 'Ця відповідь звучить правдоподібно, але не є основною концепцією для ситуації. Перегляньте управлінську логіку й спробуйте ще раз.';
+    scenarioFeedback.className = `feedback ${correct ? 'is-correct' : 'is-incorrect'}`;
+    if (scenarioIsComplete()) {
+      scenarioFeedback.textContent += ' Інтерактив завершено. Можна переходити далі.';
+    }
+  });
+  renderScenario();
+
+  // Portfolio form and preview.
+  const portfolioForm = document.getElementById('portfolio-form');
+  const portfolioStatus = document.getElementById('portfolio-status');
+  const portfolioSummary = document.getElementById('portfolio-summary');
+  const portfolioSummaryList = document.getElementById('portfolio-summary-list');
+  const portfolioDate = document.getElementById('portfolio-date');
+  const printPortfolioButton = document.getElementById('print-portfolio');
+  const summaryPrintButton = document.getElementById('summary-print-portfolio');
+  const editPortfolioButton = document.getElementById('edit-portfolio');
+  const clearPortfolioButton = document.getElementById('clear-portfolio');
+  const aiAssistantBlock = document.getElementById('ai-assistant-block');
+  const aiPromptText = document.getElementById('ai-prompt-text');
+  const copyAiPromptButton = document.getElementById('copy-ai-prompt');
+  const aiPromptStatus = document.getElementById('ai-prompt-status');
+  const portfolioFields = [...portfolioForm.querySelectorAll('input[type="text"], textarea')];
+
+  const labels = {
+    communityName: 'Назва громади',
+    climateChallenge: 'Головний кліматичний виклик із попереднього заняття',
+    communityVision: 'Якою громадою ми хочемо стати?',
+    resilienceRole: 'Що означає кліматична стійкість для цієї візії?',
+    nbsRole: 'Яку роль можуть відіграти природоорієнтовані рішення?',
+    resourceLoss: 'Яку ресурсну втрату має зменшити циркулярна економіка?',
+    principles: 'Які 3 принципи мають пройти через майбутні рішення?',
+    managementSignal: 'Який перший управлінський сигнал можна дати команді?'
+  };
+
+  function formDataObject() {
+    return Object.fromEntries(portfolioFields.map((field) => [field.name, field.value]));
+  }
+
+  function formHasContent() {
+    return portfolioFields.some((field) => field.value.trim());
+  }
+
+  function savePortfolioSilently() {
+    safeStorage.set(FORM_KEY, JSON.stringify(formDataObject()));
+  }
+
+  function savePortfolio() {
+    const saved = safeStorage.set(FORM_KEY, JSON.stringify(formDataObject()));
+    portfolioStatus.textContent = saved ? 'Відповіді збережено у цьому браузері.' : 'Відповіді залишаються у формі, але браузер не дозволив локальне збереження.';
+    portfolioStatus.className = saved ? 'feedback is-correct' : 'feedback is-incorrect';
+  }
+
+  function restorePortfolio() {
+    const raw = safeStorage.get(FORM_KEY);
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw);
+      portfolioFields.forEach((field) => {
+        if (typeof data[field.name] === 'string') field.value = data[field.name];
+      });
+    } catch (error) {
+      safeStorage.remove(FORM_KEY);
+    }
+  }
+
+  function buildAiPrompt(mode = 'facts') {
+    const data = formDataObject();
+    const principles = [data.principle1, data.principle2, data.principle3].filter((value) => value && value.trim()).join('; ') || '[не заповнено]';
+    const caseNotes = caseDataObject();
+    const contracts = {
+      facts: {
+        title: 'РЕЖИМ: ПЕРЕВІРКА ФАКТІВ І ПРИПУЩЕНЬ',
+        task: 'Проаналізуйте тільки наданий текст. Не переписуйте картку і не додавайте нових фактів.',
+        output: `Відповідь подайте у трьох блоках:
+1. «Твердження, що прямо містяться у картці».
+2. «Припущення або нечіткі твердження».
+3. «Що потребує даних або перевірки». Якщо таких пунктів немає, напишіть «Не виявлено».`
+      },
+      questions: {
+        title: 'РЕЖИМ: УТОЧНЮВАЛЬНІ ПИТАННЯ',
+        task: 'Поставте від одного до трьох коротких уточнювальних запитань, які допоможуть автору самостійно покращити картку. Не давайте готової відповіді й не переписуйте текст.',
+        output: 'Відповідь подайте лише як нумерований список запитань. Не додавайте вступу, оцінки або нової версії картки.'
+      },
+      structure: {
+        title: 'РЕЖИМ: ПОВНОТА ТА СЛАБКІ МІСЦЯ',
+        task: 'Перевірте логічні зв’язки між викликом, бажаним станом, стійкістю, NBS, циркулярністю, трьома принципами та першим управлінським сигналом. Не переписуйте картку.',
+        output: `Відповідь подайте у трьох блоках:
+1. «Сильні логічні зв’язки».
+2. «Прогалини або суперечності».
+3. «Кроки для самостійного уточнення» — до трьох коротких дій.`
+      }
+    };
+    const contract = contracts[mode] || contracts.facts;
+    return `${contract.title}
+
+ЗАВДАННЯ
+${contract.task}
+
+ФОРМАТ ВІДПОВІДІ
+${contract.output}
+
+МЕЖІ БЕЗПЕКИ
+- Працюйте лише з інформацією нижче.
+- Не вигадуйте показників, проєктів, строків, бюджетів або характеристик громади.
+- Пишіть українською, доброзичливо, стримано й професійно.
+- Не використовуйте надмірної похвали та не ухвалюйте рішення замість міського голови або команди.
+
+КАРТКА УЧАСНИКА
+Назва громади:
+${data.communityName || '[не заповнено]'}
+
+Головний кліматичний виклик:
+${data.climateChallenge || '[не заповнено]'}
+
+Бажаний стан громади:
+${data.communityVision || '[не заповнено]'}
+
+Кліматична стійкість у цій візії:
+${data.resilienceRole || '[не заповнено]'}
+
+Роль природоорієнтованих рішень:
+${data.nbsRole || '[не заповнено]'}
+
+Ресурсна втрата, яку має зменшити циркулярна економіка:
+${data.resourceLoss || '[не заповнено]'}
+
+Три принципи майбутніх рішень:
+${principles}
+
+Перший управлінський сигнал:
+${data.managementSignal || '[не заповнено]'}
+
+ОРІЄНТИР ІЗ КЕЙСУ
+Місто або приклад:
+${caseNotes['case-example'] || '[не обрано]'}
+
+Принцип із кейсу:
+${caseNotes['case-principle'] || '[не заповнено]'}`;
+  }
+
+  function renderPortfolioSummary() {
+    const data = formDataObject();
+    const values = {
+      communityName: data.communityName,
+      climateChallenge: data.climateChallenge,
+      communityVision: data.communityVision,
+      resilienceRole: data.resilienceRole,
+      nbsRole: data.nbsRole,
+      resourceLoss: data.resourceLoss,
+      principles: [data.principle1, data.principle2, data.principle3].filter(Boolean).join('\n'),
+      managementSignal: data.managementSignal
+    };
+    portfolioSummaryList.innerHTML = '';
+    Object.entries(labels).forEach(([key, label]) => {
+      const dt = document.createElement('dt');
+      const dd = document.createElement('dd');
+      dt.textContent = label;
+      dd.textContent = values[key] || '—';
+      portfolioSummaryList.append(dt, dd);
+    });
+    portfolioDate.textContent = new Date().toLocaleDateString('uk-UA');
+    portfolioSummary.hidden = false;
+    printPortfolioButton.disabled = false;
+    aiPromptText.textContent = currentAiPrompt();
+  }
+
+  portfolioFields.forEach((field) => field.addEventListener('input', () => {
+    savePortfolioSilently();
+    aiPromptText.textContent = currentAiPrompt();
+    if (!portfolioSummary.hidden) renderPortfolioSummary();
+  }));
+
+  caseFields.forEach((field) => {
+    field.addEventListener('input', () => { aiPromptText.textContent = currentAiPrompt(); });
+    field.addEventListener('change', () => { aiPromptText.textContent = currentAiPrompt(); });
+  });
+
+  portfolioForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    savePortfolio();
+    renderPortfolioSummary();
+    portfolioSummary.scrollIntoView({ behavior: scrollBehavior, block: 'start' });
+  });
+
+  async function printPortfolio(event) {
+    const button = event && event.currentTarget ? event.currentTarget : printPortfolioButton;
+    renderPortfolioSummary();
+    const data = formDataObject();
+    const community = window.UCANInterface.sanitizeFilename(data.communityName);
+    const pdfData = {
+      communityName: data.communityName,
+      climateChallenge: data.climateChallenge,
+      communityVision: data.communityVision,
+      resilienceRole: data.resilienceRole,
+      nbsRole: data.nbsRole,
+      resourceLoss: data.resourceLoss,
+      principles: [data.principle1, data.principle2, data.principle3].filter(Boolean).join('\n'),
+      managementSignal: data.managementSignal
+    };
+    await window.UCANInterface.downloadPortfolioPdf({
+      button,
+      status: portfolioStatus,
+      title: 'Картка кліматично нейтральної візії громади',
+      label: 'Портфель мера',
+      filename: community ? `UCAN_Картка_кліматично_нейтральної_візії_${community}.pdf` : 'UCAN_Картка_кліматично_нейтральної_візії.pdf',
+      fields: Object.entries(labels).map(([key, label]) => ({ key, label })),
+      data: pdfData,
+      note: 'Чернетка створена учасником. Перевірте зміст разом із командою громади.'
+    });
+  }
+
+  printPortfolioButton.addEventListener('click', printPortfolio);
+  if (summaryPrintButton) summaryPrintButton.addEventListener('click', printPortfolio);
+  editPortfolioButton.addEventListener('click', () => {
+    portfolioForm.scrollIntoView({ behavior: scrollBehavior, block: 'start' });
+    const firstField = portfolioForm.querySelector('input, textarea');
+    if (firstField) firstField.focus({ preventScroll: true });
+  });
+  window.addEventListener('afterprint', () => document.body.classList.remove('print-portfolio'));
+
+  const currentAiPrompt = () => buildAiPrompt(document.querySelector('input[name="l02-ai-mode"]:checked')?.value || 'facts');
+  document.querySelectorAll('input[name="l02-ai-mode"]').forEach(input => input.addEventListener('change', () => { aiPromptText.textContent = currentAiPrompt(); aiPromptStatus.textContent = 'Режим змінено. Запит оновлено.'; input.focus(); }));
+
+  copyAiPromptButton.addEventListener('click', async () => {
+    const prompt = currentAiPrompt();
+    aiPromptText.textContent = prompt;
+    try {
+      await window.UCANInterface.copyText(prompt);
+      aiPromptStatus.textContent = 'Скопійовано';
+      const originalLabel = copyAiPromptButton.textContent;
+      copyAiPromptButton.textContent = 'Скопійовано';
+      window.setTimeout(() => { copyAiPromptButton.textContent = originalLabel; }, 1600);
+      aiPromptStatus.className = 'feedback is-correct';
+    } catch (error) {
+      aiPromptStatus.textContent = 'Автоматичне копіювання недоступне. Відкрийте попередній перегляд і скопіюйте текст вручну.';
+      aiPromptStatus.className = 'feedback is-incorrect';
+    }
+  });
+
+
+  const previewAiPromptButton = document.getElementById('preview-ai-prompt');
+  const aiPromptDialog = document.getElementById('ai-prompt-dialog');
+  const aiPromptDialogContent = document.getElementById('ai-prompt-dialog-content');
+  const aiDialogStatus = document.getElementById('ai-dialog-status');
+  const closeAiPromptDialogButton = document.getElementById('close-ai-prompt-dialog');
+  const copyAiPromptDialogButton = document.getElementById('copy-ai-prompt-dialog');
+
+  previewAiPromptButton?.addEventListener('click', () => {
+    aiPromptDialogContent.textContent = currentAiPrompt();
+    aiDialogStatus.textContent = '';
+    aiPromptDialog.showModal();
+    aiPromptDialogContent.focus();
+  });
+  closeAiPromptDialogButton?.addEventListener('click', () => aiPromptDialog.close());
+  aiPromptDialog?.addEventListener('close', () => previewAiPromptButton?.focus());
+  aiPromptDialog?.addEventListener('click', (event) => { if (event.target === aiPromptDialog) aiPromptDialog.close(); });
+  copyAiPromptDialogButton?.addEventListener('click', async () => {
+    try {
+      await window.UCANInterface.copyText(currentAiPrompt());
+      aiDialogStatus.textContent = 'Скопійовано';
+      const originalLabel = copyAiPromptDialogButton.textContent;
+      copyAiPromptDialogButton.textContent = 'Скопійовано';
+      window.setTimeout(() => { copyAiPromptDialogButton.textContent = originalLabel; }, 1600);
+    } catch (error) {
+      aiDialogStatus.textContent = 'Автоматичне копіювання недоступне. Виділіть текст і скопіюйте його вручну.';
+    }
+  });
+
+  const imageLightbox = document.getElementById('image-lightbox');
+  const imageLightboxImage = document.getElementById('image-lightbox-image');
+  const imageLightboxCaption = document.getElementById('image-lightbox-caption');
+  const closeImageLightboxButton = document.getElementById('close-image-lightbox');
+  let imageLightboxInvoker = null;
+  document.querySelectorAll('.image-zoom-trigger').forEach((trigger) => {
+    trigger.addEventListener('click', () => {
+      const sourceImage = trigger.querySelector('img');
+      imageLightboxInvoker = trigger;
+      imageLightboxImage.src = trigger.dataset.imageSrc || sourceImage?.src || '';
+      imageLightboxImage.alt = sourceImage?.alt || '';
+      imageLightboxCaption.textContent = trigger.dataset.imageCaption || sourceImage?.alt || '';
+      imageLightbox.showModal();
+      closeImageLightboxButton.focus();
+    });
+  });
+  closeImageLightboxButton?.addEventListener('click', () => imageLightbox.close());
+  imageLightbox?.addEventListener('click', (event) => { if (event.target === imageLightbox) imageLightbox.close(); });
+  imageLightbox?.addEventListener('close', () => imageLightboxInvoker?.focus());
+
+
+
+  clearPortfolioButton.addEventListener('click', () => {
+    const confirmed = window.confirm('Очистити всі поля Картки кліматично нейтральної візії громади?');
+    if (!confirmed) return;
+    portfolioForm.reset();
+    safeStorage.remove(FORM_KEY);
+    portfolioSummary.hidden = true;
+    printPortfolioButton.disabled = true;
+    aiPromptText.textContent = currentAiPrompt();
+    portfolioStatus.textContent = 'Форму очищено.';
+    portfolioStatus.className = 'feedback';
+  });
+
   restorePortfolio();
-  restoreInteractive();
-  restoreTest();
-  updateNavigation();
-  goToPage(state.page, { focus: false, announcePage: false });
+  aiPromptText.textContent = currentAiPrompt();
+  if (formHasContent()) renderPortfolioSummary();
+
+  // Final test — Assessment Correction Addendum v1.0.
+  const finalTest = document.getElementById('final-test');
+  const testStatus = document.getElementById('test-status');
+  const correctAnswers = { q1: 'A', q2: 'D', q3: 'B', q4: 'C', q5: 'A' };
+  const explanations = {
+    q1: 'Стійкість означає підтримувати ключові послуги під час ризику, адаптуватися й відновлюватися, а не лише реагувати після події.',
+    q2: 'NBS мають управлінську цінність, коли природні процеси працюють разом з інженерією, доглядом і потребами людей.',
+    q3: 'Циркулярна логіка враховує строк служби, ремонт, повторне використання та майбутні витрати ще до закупівлі або відновлення.',
+    q4: 'Візія задає бажаний стан і принципи вибору, тому допомагає погоджувати рішення різних секторів.',
+    q5: 'Спочатку потрібно назвати ризик, користь для людей і відповідальність за догляд; лише потім обирати форму рішення.'
+  };
+
+  finalTest.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let score = 0;
+    let answered = 0;
+    Object.entries(correctAnswers).forEach(([name, answer]) => {
+      const selected = finalTest.querySelector(`input[name="${name}"]:checked`);
+      const feedback = finalTest.querySelector(`[data-feedback-for="${name}"]`);
+      if (selected) answered += 1;
+      const correct = selected && selected.value === answer;
+      if (correct) score += 1;
+      feedback.textContent = selected ? `${correct ? 'Правильно.' : 'Спробуйте ще раз.'} ${explanations[name]}` : 'Оберіть одну відповідь.';
+      feedback.className = `question-feedback ${correct ? 'correct' : 'incorrect'}`;
+    });
+
+    if (answered < 5) {
+      testStatus.textContent = 'Дайте відповідь на всі п’ять питань.';
+      testStatus.className = 'feedback is-incorrect';
+      return;
+    }
+    if (score === 5) {
+      testPassed = true;
+      safeStorage.set(TEST_KEY, 'passed');
+      testStatus.textContent = 'Усі відповіді правильні. Можна перейти до підсумку заняття.';
+      testStatus.className = 'feedback is-correct';
+      nextPageButton.disabled = false;
+      nextPageButton.textContent = 'Далі';
+      updateTestGate();
+    } else {
+      testStatus.textContent = `Правильних відповідей: ${score} з 5. Перегляньте пояснення і спробуйте ще раз.`;
+      testStatus.className = 'feedback is-incorrect';
+    }
+  });
+
+
+  const resetProgressButton = document.getElementById('reset-progress-top');
+  if (resetProgressButton) {
+    resetProgressButton.addEventListener('click', () => {
+      const confirmed = window.confirm('Скинути прогрес, інтерактивні ситуації та підсумковий тест? Практична картка залишиться збереженою.');
+      if (!confirmed) return;
+      [PAGE_KEY, MAX_PAGE_KEY, COMPLETED_KEY, TEST_KEY, SCENARIO_KEY].forEach(key => safeStorage.remove(key));
+      testPassed = false;
+      maxVisited = 1;
+      lessonCompleted = false;
+      document.body.classList.remove('is-completed');
+      completedScenarios.clear();
+      scenarios.forEach(scenario => scenario.querySelectorAll('input').forEach(input => { input.checked = false; }));
+      finalTest.reset();
+      document.querySelectorAll('.question-feedback, #test-status').forEach(el => { el.textContent = ''; el.className = el.id === 'test-status' ? 'feedback' : 'question-feedback'; });
+      if (globalStatus) globalStatus.textContent = 'Навчальний прогрес скинуто. Практична картка збережена.';
+      updateTestGate();
+      renderScenario();
+      showPage(1, { replace: true, focus: true, allowLocked: true, bypassScenarioCheckpoint: true });
+    });
+  }
+
+  updateTestGate();
+  const restoredPage = pageFromHash() || normalizePage(safeStorage.get(PAGE_KEY) || 1);
+  const initialPage = restoredPage > 6 && !scenarioIsComplete() ? 6 : restoredPage;
+  if (restoredPage > 6 && initialPage === 6 && globalStatus) globalStatus.textContent = 'Завершіть інтерактивні ситуації, щоб продовжити заняття.';
+  if (lessonCompleted) document.body.classList.add('is-completed');
+  showPage(initialPage, { replace: true, focus: false, allowLocked: testPassed, bypassScenarioCheckpoint: true });
 })();
