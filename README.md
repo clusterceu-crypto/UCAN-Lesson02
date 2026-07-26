@@ -1,32 +1,28 @@
-# UCAN Lesson 02 — Gold Release v2.2
+# UCAN Lesson 02 — Non-Local Platform Improvements Pilot v0.1
 
-## Run
+This build uses **UCAN Lesson 02 Gold Release v2.2 + CASE_OTHER Hotfix** as the executable baseline.
 
-Extract the archive and serve the folder through an HTTP/HTTPS server. Open `index.html`. The lesson has no server-side dependency and stores learner data locally in the browser.
+## Purpose
 
-## Runtime files
+Lesson 02 validates reusable internal UCAN HTML components before any cross-lesson standardization.
+The pilot does not change the instructional content, page order, approved cases, Portfolio data model,
+AI prompt content model, storage keys, visual assets, official URLs, or GitHub Pages deployment model.
 
-- `index.html`
-- `css/style.css`
-- `js/script.js`
-- `assets/images/` — three approved visual assets
+## Runtime structure
 
-## Gold completion changes
+- `index.html` — Lesson 02 content and component markup.
+- `css/ucan-core.css` — additive reusable component foundation.
+- `css/style.css` — approved Lesson 02 visual layer, retained to reduce regression risk.
+- `js/ucan-core.js` — reusable storage, notification, dialog, image viewer, form, clipboard and PDF helpers.
+- `js/script.js` — Lesson 02-specific data, learning flow, prompts, gates and case/Portfolio rules.
+- `assets/images/` — approved A01–A03 assets, byte-preserved.
+- `docs/` — pilot reports, component assessment and manifest.
 
-- one or several city cases can be selected;
-- each selected case keeps separate problem, principle and local-check notes;
-- legacy `ucan_l02_case_notes_v1` data migrate idempotently to `ucan_l02_case_notes_v2` while the source record is retained;
-- multi-case transfer fills available principle fields and requires merge, replace or skip for occupied targets;
-- case provenance is included consistently in Portfolio Summary, Print/Save-as-PDF and all three AI modes;
-- `communityVision` is identified as a preparatory desired-state sketch; `climateNeutralVision` remains the final integrated vision;
-- the AI learner workflow explicitly covers choose, preview, copy, open, paste and verify;
-- the PDF action is labelled `🖨️ Друк / Зберегти як PDF` and continues to use searchable browser Print-to-PDF;
-- current release documentation replaces superseded v2.0 claims.
+## Data preservation
 
-## Privacy
+Existing localStorage keys remain unchanged. The build does not clear or migrate learner data.
 
-Portfolio, case notes and progress remain in browser localStorage. External AI platforms receive nothing automatically. The learner chooses what to copy and paste. PDF preparation remains local.
+## Validation status
 
-## Verification boundary
-
-The completion build passed package integrity, JavaScript syntax and controlled Chromium sanity checks. PDF-UA is not implemented or claimed. Independent deployment verification in the target browser matrix remains a release-governance action, not a hidden application claim.
+This is a **validation pilot**, not a UCAN Master Template or platform standard. Reuse decisions require
+cross-lesson validation, beginning with Lesson 03.

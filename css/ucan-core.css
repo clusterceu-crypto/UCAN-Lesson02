@@ -1,0 +1,101 @@
+/* UCAN reusable component foundation — validation pilot v0.1.
+   Additive layer: preserves the approved Lesson 02 visual system. */
+
+.ucan-notification-region {
+  position: fixed;
+  z-index: 1200;
+  inset: 5.25rem 1rem auto auto;
+  display: grid;
+  gap: .6rem;
+  width: min(26rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.ucan-notification,
+.ucan-notification-toast {
+  min-height: 2.2rem;
+  margin-top: .75rem;
+  padding: .75rem .9rem;
+  border: 1px solid var(--gray-300, #c9d2d8);
+  border-radius: 10px;
+  background: var(--white, #fff);
+  color: var(--text, #17242e);
+}
+.ucan-notification-toast { margin: 0; box-shadow: 0 10px 26px rgba(13, 41, 69, .18); pointer-events: auto; }
+.ucan-notification.is-success, .ucan-notification-toast.is-success { background: var(--green-soft, #e7f3ed); border-color: #8ec2a7; }
+.ucan-notification.is-warning, .ucan-notification-toast.is-warning { background: var(--warning-soft, #fff4dd); border-color: #e6bf78; }
+.ucan-notification.is-info, .ucan-notification-toast.is-info { background: var(--turquoise-soft, #e6f6f5); border-color: #9bd5d1; }
+.ucan-notification.is-error, .ucan-notification-toast.is-error { background: #fff0f0; border-color: #d99a9a; color: var(--danger, #8b2e2e); }
+.ucan-notification.is-loading, .ucan-notification-toast.is-loading { background: var(--gray-050, #f8fafb); border-color: var(--gray-300, #c9d2d8); }
+
+.button.is-loading { cursor: progress; }
+.button.is-success { box-shadow: 0 0 0 3px var(--green-soft, #e7f3ed); }
+.button.is-warning { box-shadow: 0 0 0 3px var(--warning-soft, #fff4dd); }
+.button.is-error { box-shadow: 0 0 0 3px #fff0f0; }
+
+.ucan-component {
+  --ucan-component-border: var(--gray-300, #c9d2d8);
+  position: relative;
+}
+.ucan-component-header { display: grid; gap: .35rem; margin-bottom: 1rem; }
+.ucan-component-header > :first-child { margin-top: 0; }
+.ucan-component-description { color: var(--gray-600, #53636e); }
+
+.ucan-empty-state {
+  display: grid;
+  gap: .35rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px dashed var(--gray-300, #c9d2d8);
+  border-radius: var(--radius, 16px);
+  background: var(--gray-050, #f8fafb);
+  color: var(--gray-600, #53636e);
+}
+.ucan-empty-state strong { color: var(--navy-deep, #0d2945); }
+
+.ucan-portfolio { scroll-margin-top: 7rem; }
+.ucan-portfolio-summary { scroll-margin-top: 7rem; }
+.ucan-portfolio-summary [data-empty-value="true"] { color: var(--gray-600, #53636e); font-style: italic; }
+
+.ucan-case-selector [aria-expanded="true"] + span { font-weight: 800; }
+.ucan-case-selector .case-note-record { scroll-margin-top: 7rem; }
+.ucan-case-selector .case-note-record textarea,
+.ucan-case-selector .case-note-record input { min-height: 44px; }
+
+.ucan-ai-panel {
+  border: 1px solid var(--gray-300, #c9d2d8);
+  border-radius: var(--radius, 16px);
+  padding: clamp(1rem, 3vw, 1.4rem);
+  background: var(--white, #fff);
+}
+.ucan-ai-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem .8rem;
+  align-items: baseline;
+  margin: 1rem 0;
+  padding: .8rem 1rem;
+  border-radius: 10px;
+  background: var(--gray-050, #f8fafb);
+  border: 1px solid var(--gray-300, #c9d2d8);
+}
+.ucan-ai-context strong { color: var(--navy-deep, #0d2945); }
+.ai-mode-copy { display: grid; gap: .2rem; }
+.ai-mode-copy small { color: var(--gray-600, #53636e); font-weight: 400; line-height: 1.4; }
+.ucan-ai-panel .ai-prompt-preview[aria-busy="true"] { opacity: .68; }
+
+.ucan-dialog[open], .image-lightbox[open] { display: grid; }
+.ucan-dialog:focus-visible, .image-lightbox:focus-visible { outline: none; }
+
+[data-component] :focus-visible,
+.ucan-component :focus-visible { outline: 3px solid var(--turquoise, #1f8f8a); outline-offset: 3px; }
+
+@media (max-width: 700px) {
+  .ucan-notification-region { inset: 4.75rem .65rem auto .65rem; width: auto; }
+  .ucan-ai-panel { padding: 1rem; }
+  .ucan-ai-context { align-items: flex-start; flex-direction: column; }
+}
+
+@media print {
+  .ucan-notification-region, .ucan-notification, .ucan-empty-state { display: none !important; }
+}

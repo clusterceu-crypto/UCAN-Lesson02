@@ -1,17 +1,16 @@
 <!DOCTYPE html>
+
 <html lang="uk">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="Заняття 2: кліматична стійкість, природоорієнтовані рішення, циркулярна економіка та кліматично нейтральна візія громади." name="description"/>
 <title>Заняття 2 — Ключові концепції кліматично нейтрального міста</title>
-
-<link href="css/style.css" rel="stylesheet"/><script>document.documentElement.classList.add('js');</script>
+<link href="css/ucan-core.css" rel="stylesheet"/><link href="css/style.css" rel="stylesheet"/><script>document.documentElement.classList.add('js');</script>
 </head>
 <body data-ucan-interface="1.0">
 <a class="skip-link" href="#main-content">Перейти до основного змісту</a>
-<header aria-label="Навігація заняття" class="site-header"><div aria-label="UCAN" class="brand">UCAN</div><div class="header-center"><span class="lesson-label">Заняття 02</span><span aria-live="polite" class="page-label" id="page-label"></span></div><button aria-describedby="reset-progress-scope" class="button button-quiet button-small" id="reset-progress-top" type="button">🔄 Почати спочатку</button><span class="visually-hidden" id="reset-progress-scope">Очищує прогрес, самоперевірку й тест, але зберігає практичну роботу.</span></header><div aria-label="Прогрес заняття" class="progress-shell"><div aria-valuemax="100" aria-valuemin="0" aria-valuenow="10" aria-valuetext="Сторінка 1 з 10, прогрес 10%" class="progress-bar" id="progress-track" role="progressbar"><span class="progress-fill" id="progress-bar"></span></div><span class="progress-text" id="progress-text">Сторінка 1 з 10</span><span class="progress-percent" id="progress-percent">10%</span></div><div aria-live="polite" class="status-region" id="global-status" role="status"></div>
-
+<header aria-label="Навігація заняття" class="site-header"><div aria-label="UCAN" class="brand">UCAN</div><div class="header-center"><span class="lesson-label">Заняття 02</span><span aria-live="polite" class="page-label" id="page-label"></span></div><button aria-describedby="reset-progress-scope" class="button button-quiet button-small" id="reset-progress-top" type="button">🔄 Почати спочатку</button><span class="visually-hidden" id="reset-progress-scope">Очищує прогрес, самоперевірку й тест, але зберігає практичну роботу.</span></header><div aria-label="Прогрес заняття" class="progress-shell"><div aria-valuemax="100" aria-valuemin="0" aria-valuenow="10" aria-valuetext="Сторінка 1 з 10, прогрес 10%" class="progress-bar" id="progress-track" role="progressbar"><span class="progress-fill" id="progress-bar"></span></div><span class="progress-text" id="progress-text">Сторінка 1 з 10</span><span class="progress-percent" id="progress-percent">10%</span></div><div aria-live="polite" class="status-region" id="global-status" role="status"></div><div aria-label="Повідомлення системи" class="ucan-notification-region" id="ucan-notification-region"></div>
 <main id="main-content" tabindex="-1">
 <section aria-labelledby="page-1-title" class="lesson-page is-active" data-page="1" data-page-label="Початок" id="page-1">
 <div class="page-shell ucan-page-card">
@@ -230,19 +229,19 @@
 <div aria-labelledby="case-task-title" class="micro-task">
 <h3 id="case-task-title"><span aria-hidden="true">✍️</span> Маленьке завдання перед практичною карткою</h3>
 <p>Порівняйте один або кілька прикладів із викликом <strong id="case-community-name">Вашої громади</strong>. Для кожного обраного прикладу запишіть окремий висновок своїми словами.</p>
-<fieldset class="case-selection-fieldset">
+<fieldset class="case-selection-fieldset ucan-component ucan-case-selector" data-component="case-selector">
 <legend>Оберіть один або кілька прикладів</legend>
 <div class="case-selection-grid">
-<label class="case-selection-option"><input data-case-select="" type="checkbox" value="lviv"/> <span>Львів — системна візія громади</span></label>
-<label class="case-selection-option"><input data-case-select="" type="checkbox" value="rotterdam"/> <span>Роттердам — багатофункціональна водна площа</span></label>
-<label class="case-selection-option"><input data-case-select="" type="checkbox" value="amsterdam"/> <span>Амстердам — циркулярність у міських рішеннях</span></label>
-<label class="case-selection-option"><input data-case-select="" type="checkbox" value="leuven"/> <span>Левен — від візії до дорожньої карти</span></label>
-<label class="case-selection-option"><input aria-controls="selected-case-notes" data-case-select="" type="checkbox" value="other"/> <span>Інше</span></label>
+<label class="case-selection-option"><input aria-controls="selected-case-notes" data-case-select="" type="checkbox" value="lviv"/> <span>Львів — системна візія громади</span></label>
+<label class="case-selection-option"><input aria-controls="selected-case-notes" data-case-select="" type="checkbox" value="rotterdam"/> <span>Роттердам — багатофункціональна водна площа</span></label>
+<label class="case-selection-option"><input aria-controls="selected-case-notes" data-case-select="" type="checkbox" value="amsterdam"/> <span>Амстердам — циркулярність у міських рішеннях</span></label>
+<label class="case-selection-option"><input aria-controls="selected-case-notes" data-case-select="" type="checkbox" value="leuven"/> <span>Левен — від візії до дорожньої карти</span></label>
+<label class="case-selection-option"><input aria-controls="selected-case-notes" aria-expanded="false" data-case-select="" type="checkbox" value="other"/> <span>Інше</span></label>
 </div>
 </fieldset>
 <p class="field-hint">Для кожного прикладу збережіть: що вирішувало місто, який принцип корисний і що варто перевірити у своїй громаді.</p>
 <div aria-live="polite" class="feedback" id="case-selection-status" role="status"></div>
-<div class="selected-case-notes" id="selected-case-notes"></div>
+<div class="selected-case-notes" data-component-part="case-notes" id="selected-case-notes"></div>
 <button class="button button-primary" id="case-transfer" type="button">Перенести всі висновки до практичної картки</button>
 <div aria-live="polite" class="feedback" id="case-transfer-status" role="status"></div>
 </div>
@@ -323,7 +322,6 @@
 <p id="scenario-gate-text">Виконайте всі три ситуації, щоб перейти до наступного розділу.</p>
 <div class="checkpoint-actions">
 <button class="button button-primary" id="scenario-stay" type="button">Повернутися до завдання</button>
-
 </div>
 </section>
 </div>
@@ -355,7 +353,7 @@
 <article><h2>Крок 3. Визначте три принципи майбутніх рішень</h2><ul><li>Який принцип стійкості має бути обов’язковим?</li><li>Де природоорієнтовані рішення (NBS) можуть бути частиною рішення або перевірки?</li><li>Яку ресурсну втрату може зменшити циркулярна логіка?</li></ul></article>
 <article><h2>Крок 4. Заповніть форму</h2><p>Відповіді зберігаються у цьому браузері. Після збереження Ви отримаєте картку для друку, PDF та аналізу з AI-помічником.</p></article>
 </div>
-<form class="portfolio-form" id="portfolio-form" novalidate="">
+<form class="portfolio-form ucan-component ucan-portfolio" data-component="portfolio" data-storage-key="ucan_l02_portfolio_v1" id="portfolio-form" novalidate="">
 <div class="form-field"><label for="community-name">Назва громади</label><input autocomplete="organization" id="community-name" name="communityName" type="text"/></div>
 <div class="form-field"><label for="climate-challenge">Головний кліматичний виклик із попереднього заняття</label><textarea id="climate-challenge" name="climateChallenge" rows="4"></textarea></div>
 <div class="form-field"><label for="community-vision">Попередній ескіз бажаного стану громади</label><p id="community-vision-help">Коротко опишіть, якою має стати громада після подолання визначеного виклику. Нижче Ви сформулюєте фінальну інтегровану візію.</p><textarea aria-describedby="community-vision-help" id="community-vision" name="communityVision" rows="4"></textarea></div>
@@ -376,12 +374,12 @@
 </div>
 <div class="form-actions">
 <button class="button button-primary" type="submit">💾 Зберегти карту</button>
-<button class="button button-secondary" disabled="" id="print-portfolio" type="button">🖨️ Друк / Зберегти як PDF</button>
+<button class="button button-secondary" data-component-action="save-as-pdf" disabled="" id="print-portfolio" type="button">⬇️ Завантажити мою картку PDF</button><p aria-live="polite" class="field-hint" hidden="" id="pdf-action-hint" role="status">У вікні браузера оберіть «Зберегти як PDF».</p>
 <button class="button button-danger" id="clear-portfolio" type="button">🗑️ Очистити практичне завдання</button>
 </div>
 <div aria-live="polite" class="feedback" id="portfolio-status" role="status"></div>
 </form>
-<section aria-labelledby="portfolio-summary-title" class="portfolio-summary" hidden="" id="portfolio-summary">
+<div class="ucan-empty-state" id="portfolio-empty-state" role="status"><strong>Практична картка ще не збережена.</strong><span>Заповніть поля вище та натисніть «Зберегти карту» — дані залишаться у цьому браузері.</span></div><section aria-labelledby="portfolio-summary-title" class="portfolio-summary ucan-component ucan-portfolio-summary" data-component="portfolio-summary" hidden="" id="portfolio-summary">
 <p class="print-kicker">Заняття 2 · Портфель мера</p>
 <h2 id="portfolio-summary-title">Картка кліматично нейтральної візії громади</h2>
 <div class="portfolio-meta"><span><strong>Дата формування:</strong> <span id="portfolio-date"></span></span><span><strong>Статус:</strong> Чернетка для обговорення з командою</span></div>
@@ -407,7 +405,7 @@
 <li>Картку можна використати як основу для наступного заняття про технології та цифровізацію.</li>
 </ul>
 </section>
-<div class="page-shell ai-practical-block"><div class="ucan-block-label">AI-ПІДТРИМКА</div><h2 class="ai-section-title">AI-підтримка (необов’язково)</h2><p class="lead">Використайте ШІ після того, як сформулювали власну відповідь. ШІ може допомогти перевірити логіку, поставити уточнювальні питання або знайти слабкі місця, але не ухвалює рішення замість Вас.</p><p>Запит формується з полів артефакту та збережених Вами висновків із вибраних кейсів. Дані не передаються автоматично.</p><ol class="ai-steps" aria-label="Послідовність роботи з AI-підтримкою"><li>Оберіть режим.</li><li>Перегляньте запит.</li><li>Скопіюйте запит.</li><li>Відкрийте ChatGPT або Gemini.</li><li>Вставте запит у чат.</li><li>Перевірте результат самостійно.</li></ol><fieldset aria-describedby="l02-ai-safety" class="ai-mode-selector"><legend>Оберіть режим AI-підтримки</legend><label class="ai-mode-option choice-card"><input checked="" name="l02-ai-mode" type="radio" value="facts"/><span>Перевірити факти й припущення</span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="questions"/><span>Поставити уточнювальні питання</span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="structure"/><span>Перевірити повноту та слабкі місця рішення</span></label></fieldset><h2>Попередній перегляд запиту</h2><pre aria-label="Підготовлений запит для ШІ" class="ai-prompt-preview" id="ai-prompt-text" tabindex="0">Заповніть практичну форму та оберіть режим підтримки.</pre><div class="button-row ai-actions"><button class="button button-secondary" id="preview-ai-prompt" type="button">👁️ Переглянути запит</button><button class="button button-primary" id="copy-ai-prompt" type="button">📋 Скопіювати запит</button><a aria-label="Відкрити ChatGPT у новій вкладці" class="button button-external" data-ai-platform="ChatGPT" href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank">🤖 Відкрити ChatGPT ↗</a><a aria-label="Відкрити Gemini у новій вкладці" class="button button-external" data-ai-platform="Gemini" href="https://gemini.google.com/app" rel="noopener noreferrer" target="_blank">✨ Відкрити Gemini ↗</a></div><div aria-live="polite" class="feedback" id="ai-prompt-status" role="status"></div><aside class="callout safety-boundary" id="l02-ai-safety" role="note"><h2>Безпека та відповідальність</h2><p>Не вставляйте персональні дані, конфіденційну інформацію, службові документи або неперевірені чутливі дані.</p><p>Перевіряйте факти та зберігайте відповідальність за остаточне управлінське рішення.</p></aside></div></div>
+<div class="page-shell ai-practical-block ucan-component ucan-ai-panel" data-component="ai-support" id="ai-assistant-block"><div class="ucan-block-label">AI-ПІДТРИМКА</div><h2 class="ai-section-title">AI-підтримка (необов’язково)</h2><p class="lead">Використайте ШІ після того, як сформулювали власну відповідь. ШІ може допомогти перевірити логіку, поставити уточнювальні питання або знайти слабкі місця, але не ухвалює рішення замість Вас.</p><p>Запит формується з полів артефакту та збережених Вами висновків із вибраних кейсів. Дані не передаються автоматично.</p><ol aria-label="Послідовність роботи з AI-підтримкою" class="ai-steps"><li>Оберіть режим.</li><li>Перегляньте запит.</li><li>Скопіюйте запит.</li><li>Відкрийте ChatGPT або Gemini.</li><li>Вставте запит у чат.</li><li>Перевірте результат самостійно.</li></ol><div aria-live="polite" class="ucan-ai-context" id="ai-context-summary" role="status"><strong>Контекст запиту:</strong> <span id="ai-context-summary-text">практична картка ще не заповнена.</span></div><fieldset aria-describedby="l02-ai-safety" class="ai-mode-selector"><legend>Оберіть режим AI-підтримки</legend><label class="ai-mode-option choice-card"><input checked="" name="l02-ai-mode" type="radio" value="facts"/><span class="ai-mode-copy"><strong>Перевірити факти й припущення</strong><small>Допомагає відокремити твердження картки від припущень і пунктів, які потребують перевірки.</small></span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="questions"/><span class="ai-mode-copy"><strong>Поставити уточнювальні питання</strong><small>Формує короткі питання, які допомагають самостійно уточнити картку без готової відповіді.</small></span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="structure"/><span class="ai-mode-copy"><strong>Перевірити повноту та слабкі місця рішення</strong><small>Перевіряє логічні зв’язки та прогалини між складовими практичної картки.</small></span></label></fieldset><h2>Попередній перегляд запиту</h2><pre aria-label="Підготовлений запит для ШІ" class="ai-prompt-preview" id="ai-prompt-text" tabindex="0">Заповніть практичну форму та оберіть режим підтримки.</pre><div class="button-row ai-actions"><button class="button button-primary" data-component-action="prepare-ai-prompt" id="prepare-ai-prompt" type="button">✨ Підготувати запит</button><button class="button button-secondary" data-component-action="preview-ai-prompt" id="preview-ai-prompt" type="button">👁️ Переглянути запит</button><button class="button button-secondary" data-component-action="copy-ai-prompt" id="copy-ai-prompt" type="button">📋 Скопіювати запит</button><a aria-label="Відкрити ChatGPT у новій вкладці" class="button button-external" data-ai-platform="ChatGPT" href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank">🤖 Відкрити ChatGPT ↗</a><a aria-label="Відкрити Gemini у новій вкладці" class="button button-external" data-ai-platform="Gemini" href="https://gemini.google.com/app" rel="noopener noreferrer" target="_blank">✨ Відкрити Gemini ↗</a></div><div aria-atomic="true" aria-live="polite" class="ucan-notification is-info" id="ai-prompt-status" role="status">Оберіть режим і підготуйте запит. Дані не передаються автоматично.</div><aside class="callout safety-boundary" id="l02-ai-safety" role="note"><h2>Безпека та відповідальність</h2><p>Не вставляйте персональні дані, конфіденційну інформацію, службові документи або неперевірені чутливі дані.</p><p>Перевіряйте факти та зберігайте відповідальність за остаточне управлінське рішення.</p></aside></div></div>
 </section>
 <section aria-labelledby="page-9-title" class="lesson-page" data-page="9" data-page-label="Підсумковий тест" id="page-9">
 <div class="page-shell ucan-page-card">
@@ -484,17 +482,17 @@
 <p>У цьому занятті Ви сформулювали першу кліматично нейтральну візію. Наступний крок — зрозуміти, як технології, цифровізація й дані можуть допомогти цю візію підтримати, а не перетворитися на “технології заради технологій”.</p>
 </div>
 <nav aria-label="Переходи між заняттями" class="button-row adjacent-lesson-links">
-<a class="button button-secondary" aria-label="Відкрити попереднє заняття у новій вкладці" href="https://clusterceu-crypto.github.io/UCAN-Lesson01/" rel="prev noopener noreferrer" target="_blank">← Попереднє заняття</a>
-<a class="button button-primary" aria-label="Відкрити наступне заняття у новій вкладці" href="https://clusterceu-crypto.github.io/UCAN-Lesson03/" rel="next noopener noreferrer" target="_blank">Наступне заняття →</a>
+<a aria-label="Відкрити попереднє заняття у новій вкладці" class="button button-secondary" href="https://clusterceu-crypto.github.io/UCAN-Lesson01/" rel="prev noopener noreferrer" target="_blank">← Попереднє заняття</a>
+<a aria-label="Відкрити наступне заняття у новій вкладці" class="button button-primary" href="https://clusterceu-crypto.github.io/UCAN-Lesson03/" rel="next noopener noreferrer" target="_blank">Наступне заняття →</a>
 </nav>
 </div>
 </section>
 </main>
-<dialog aria-labelledby="ai-prompt-dialog-title" class="ucan-dialog" id="ai-prompt-dialog">
+<dialog aria-labelledby="ai-prompt-dialog-title" class="ucan-dialog ucan-component-modal" data-component="modal" data-ucan-modal="" id="ai-prompt-dialog">
 <div class="dialog-card">
 <div class="dialog-header">
 <h2 id="ai-prompt-dialog-title">👁️ Перегляд запиту</h2>
-<button aria-label="Закрити перегляд запиту" class="button button-secondary button-small" id="close-ai-prompt-dialog" type="button">Закрити</button>
+<button aria-label="Закрити перегляд запиту" class="button button-secondary button-small" data-dialog-close="" id="close-ai-prompt-dialog" type="button">Закрити</button>
 </div>
 <pre aria-label="Підготовлений запит для AI" class="dialog-prompt" id="ai-prompt-dialog-content" tabindex="0"></pre>
 <div class="button-row dialog-actions">
@@ -502,13 +500,13 @@
 </div>
 <div aria-live="polite" class="feedback" id="ai-dialog-status" role="status"></div>
 </div>
-</dialog><dialog aria-labelledby="image-lightbox-caption" class="image-lightbox" id="image-lightbox">
+</dialog><dialog aria-labelledby="image-lightbox-caption" class="image-lightbox" data-component="modal" data-ucan-modal="" id="image-lightbox">
 <div class="image-lightbox-card">
-<button aria-label="Закрити збільшене зображення" class="image-lightbox-close" id="close-image-lightbox" type="button">×</button>
+<button aria-label="Закрити збільшене зображення" class="image-lightbox-close" data-dialog-close="" id="close-image-lightbox" type="button">×</button>
 <img alt="" id="image-lightbox-image"/>
 <p class="image-lightbox-caption" id="image-lightbox-caption"></p>
 </div>
-</dialog><dialog aria-labelledby="portfolio-transfer-title" class="ucan-dialog" id="portfolio-transfer-dialog">
+</dialog><dialog aria-labelledby="portfolio-transfer-title" class="ucan-dialog ucan-component-modal" data-component="modal" data-ucan-modal="" id="portfolio-transfer-dialog">
 <div class="dialog-card">
 <div class="dialog-header">
 <h2 id="portfolio-transfer-title">Захист заповненого Portfolio</h2>
@@ -534,6 +532,5 @@
 <footer class="site-footer">
 <p>UCAN · Заняття 2</p>
 </footer>
-
-<script src="js/script.js"></script></body>
+<script src="js/ucan-core.js"></script><script src="js/script.js"></script></body>
 </html>

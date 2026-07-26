@@ -1,179 +1,9 @@
+/* UCAN Lesson 02 platform validation pilot v0.1 — lesson-specific runtime. */
 (() => {
   'use strict';
 
-  const Interface = {};
-
-  Interface.copyText = async function copyText(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-    const area = document.createElement('textarea');
-    area.value = text;
-    area.setAttribute('readonly', '');
-    area.style.position = 'fixed';
-    area.style.opacity = '0';
-    document.body.appendChild(area);
-    area.select();
-    const copied = document.execCommand('copy');
-    area.remove();
-    if (!copied) throw new Error('Clipboard copy failed');
-    return true;
-  };
-
-  function sanitizeFilename(value) {
-    const cleaned = String(value || '')
-      .trim()
-      .replace(/[\\/:*?"<>|]+/g, '_')
-      .replace(/\s+/g, '_')
-      .slice(0, 80);
-    return cleaned || '';
-  }
-  Interface.sanitizeFilename = sanitizeFilename;
-
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
-  function printableValue(value) {
-    const normalized = String(value ?? '').replace(/\r\n?/g, '\n').trim();
-    return normalized || '—';
-  }
-
-  function createPortfolioPrintHtml({ title, label = 'Портфель мера', filename, fields, data, note }) {
-    const documentTitle = String(filename || title || 'UCAN Portfolio')
-      .replace(/\.pdf$/i, '')
-      .trim() || 'UCAN Portfolio';
-    const fieldSections = fields.map(field => `
-      <section class="portfolio-section" aria-labelledby="pdf-field-${escapeHtml(field.key)}">
-        <h2 id="pdf-field-${escapeHtml(field.key)}">${escapeHtml(field.label)}</h2>
-        <div class="portfolio-value">${escapeHtml(printableValue(data[field.key]))}</div>
-      </section>`).join('');
-    const noteSection = note ? `
-      <footer class="portfolio-note">
-        <strong>Примітка:</strong> ${escapeHtml(note)}
-      </footer>` : '';
-
-    return `<!doctype html>
-<html lang="uk">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(documentTitle)}</title>
-  <style>
-    @page { size: A4; margin: 15mm 16mm 16mm; }
-    *, *::before, *::after { box-sizing: border-box; }
-    html { color: #1f2a33; background: #ffffff; font-family: Arial, "DejaVu Sans", sans-serif; }
-    body { margin: 0; font-size: 10.5pt; line-height: 1.42; }
-    header { margin: 0 0 5.5mm; }
-    h1 { margin: 0 0 2mm; color: #123f68; font-size: 22pt; line-height: 1.16; }
-    .portfolio-label { margin: 0 0 4mm; color: #2d7b55; font-size: 14pt; font-weight: 700; }
-    .privacy-note { margin: 0; padding: 3.5mm 4mm; border-left: 1.2mm solid #2d7b55; background: #eef7f2; color: #34454f; }
-    main { display: block; }
-    .portfolio-section { margin: 0; padding: 3mm 0 2.8mm; border-top: 0.35mm solid #cfd9df; break-inside: auto; page-break-inside: auto; }
-    .portfolio-section h2 { margin: 0 0 1.3mm; color: #123f68; font-size: 12.2pt; line-height: 1.25; break-after: avoid; page-break-after: avoid; }
-    .portfolio-value { white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; orphans: 3; widows: 3; }
-    .portfolio-note { margin: 2mm 0 0; color: #47545e; font-size: 9.2pt; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; }
-    @media screen {
-      body { max-width: 210mm; margin: 0 auto; padding: 17mm; box-shadow: 0 0 18px rgba(0,0,0,.12); }
-    }
-    @media print {
-      html, body { background: #ffffff; }
-      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>${escapeHtml(title)}</h1>
-    <p class="portfolio-label">${escapeHtml(label)}</p>
-    <p class="privacy-note">Локально створений навчальний артефакт. Дані не передавалися на сервер.</p>
-    ${noteSection}
-  </header>
-  <main>${fieldSections}</main>
-</body>
-</html>`;
-  }
-
-  Interface.createPortfolioPrintHtml = createPortfolioPrintHtml;
-
-  async function printPortfolioHtml(html) {
-    const iframe = document.createElement('iframe');
-    iframe.setAttribute('title', 'Підготовка локального PDF');
-    iframe.setAttribute('aria-hidden', 'true');
-    Object.assign(iframe.style, {
-      position: 'fixed',
-      right: '0',
-      bottom: '0',
-      width: '1px',
-      height: '1px',
-      border: '0',
-      opacity: '0',
-      pointerEvents: 'none'
-    });
-    document.body.appendChild(iframe);
-
-    const printWindow = iframe.contentWindow;
-    const printDocument = iframe.contentDocument || (printWindow && printWindow.document);
-    if (!printWindow || !printDocument) {
-      iframe.remove();
-      throw new Error('Print document could not be created');
-    }
-
-    printDocument.open();
-    printDocument.write(html);
-    printDocument.close();
-
-    if (printDocument.fonts && printDocument.fonts.ready) {
-      try { await printDocument.fonts.ready; } catch (error) { /* Browser fallback font is acceptable. */ }
-    }
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-    let removed = false;
-    const cleanup = () => {
-      if (removed) return;
-      removed = true;
-      iframe.remove();
-    };
-    printWindow.addEventListener('afterprint', cleanup, { once: true });
-    window.setTimeout(cleanup, 60000);
-    printWindow.focus();
-    printWindow.print();
-  }
-
-  Interface.downloadPortfolioPdf = async function downloadPortfolioPdf({ button, status, title, label, filename, fields, data, note }) {
-    if (!button) throw new Error('PDF button is required');
-    const original = button.textContent;
-    button.disabled = true;
-    button.setAttribute('aria-busy', 'true');
-    button.textContent = 'Підготовка PDF…';
-    if (status) status.textContent = 'Готуємо текстовий PDF локально у Вашому браузері…';
-    try {
-      const html = createPortfolioPrintHtml({ title, label, filename, fields, data, note });
-      await printPortfolioHtml(html);
-      if (status) status.textContent = 'Відкрито системний діалог друку. Оберіть «Зберегти як PDF». Дані залишаються у Вашому браузері.';
-    } catch (error) {
-      console.error('Portfolio PDF generation failed', error);
-      if (status) status.textContent = 'Не вдалося підготувати PDF. Перевірте налаштування друку браузера та спробуйте ще раз.';
-      throw error;
-    } finally {
-      button.disabled = false;
-      button.removeAttribute('aria-busy');
-      button.textContent = original;
-    }
-  };
-
-  window.UCANInterface = Object.freeze(Interface);
-})();
-
-/* UCAN Lesson 02 Gold Release v2.2 — completed local production runtime. */
-(() => {
-  'use strict';
+  const Core = window.UCANCore;
+  if (!Core) throw new Error('UCAN reusable core failed to load');
 
   const TOTAL_PAGES = 10;
   const PAGE_KEY = 'ucan_l02_progress_v1';
@@ -187,24 +17,7 @@
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
 
-  const safeStorage = {
-    get(key) {
-      try { return window.localStorage.getItem(key); } catch (error) { return null; }
-    },
-    set(key, value) {
-      try { window.localStorage.setItem(key, value); return true; } catch (error) { return false; }
-    },
-    remove(key) {
-      try { window.localStorage.removeItem(key); return true; } catch (error) { return false; }
-    },
-    keys() {
-      try {
-        return Array.from({ length: window.localStorage.length }, (_, index) => window.localStorage.key(index)).filter(Boolean);
-      } catch (error) {
-        return [];
-      }
-    }
-  };
+  const safeStorage = Core.storage;
 
   const pages = [...document.querySelectorAll('.lesson-page')];
   const pageLinks = [...document.querySelectorAll('[data-page-link]')];
@@ -574,10 +387,7 @@
           saveCaseState();
           renderSelectedCaseNotes();
           refreshCaseDependentOutputs();
-          if (caseSelectionStatus) {
-            caseSelectionStatus.textContent = 'Кейс «Інше» приховано. Введені дані збережено.';
-            caseSelectionStatus.className = 'feedback';
-          }
+          if (caseSelectionStatus) Core.notify(caseSelectionStatus, 'info', 'Кейс «Інше» приховано. Введені дані збережено.');
         } else {
           removeCaseRecord(sourceRecord.id, checkbox || { checked: false });
         }
@@ -647,6 +457,9 @@
           saveCaseState();
           refreshCaseDependentOutputs();
         });
+        textarea.addEventListener('change', () => {
+          Core.notify(caseSelectionStatus, 'success', 'Нотатки до кейсів збережено.');
+        });
         wrapper.appendChild(textarea);
         article.appendChild(wrapper);
       });
@@ -659,26 +472,22 @@
     if (id === OTHER_CASE_ID) {
       const otherRecord = storedOtherCaseRecord();
       if (input.checked) {
+        input.setAttribute('aria-expanded', 'true');
         if (otherRecord) otherRecord.id = OTHER_CASE_ID;
         else caseState.records.push({ id: OTHER_CASE_ID, title: '', problem: '', principle: '', localCheck: '' });
         saveCaseState();
         renderSelectedCaseNotes();
         const titleInput = document.getElementById('case-other-title');
         if (titleInput) titleInput.focus();
-        if (caseSelectionStatus) {
-          caseSelectionStatus.textContent = `Обрано прикладів: ${caseRecords().length}. Нотатки зберігаються у цьому браузері.`;
-          caseSelectionStatus.className = 'feedback is-correct';
-        }
+        if (caseSelectionStatus) Core.notify(caseSelectionStatus, 'success', `Обрано прикладів: ${caseRecords().length}. Нотатки зберігаються у цьому браузері.`);
         refreshCaseDependentOutputs();
       } else if (otherRecord) {
+        input.setAttribute('aria-expanded', 'false');
         otherRecord.id = OTHER_CASE_HIDDEN_ID;
         saveCaseState();
         renderSelectedCaseNotes();
         refreshCaseDependentOutputs();
-        if (caseSelectionStatus) {
-          caseSelectionStatus.textContent = 'Кейс «Інше» приховано. Введені дані збережено.';
-          caseSelectionStatus.className = 'feedback';
-        }
+        if (caseSelectionStatus) Core.notify(caseSelectionStatus, 'info', 'Кейс «Інше» приховано. Введені дані збережено.');
       }
       return;
     }
@@ -690,10 +499,7 @@
       }
       saveCaseState();
       renderSelectedCaseNotes();
-      if (caseSelectionStatus) {
-        caseSelectionStatus.textContent = `Обрано прикладів: ${caseRecords().length}. Нотатки зберігаються у цьому браузері.`;
-        caseSelectionStatus.className = 'feedback is-correct';
-      }
+      if (caseSelectionStatus) Core.notify(caseSelectionStatus, 'success', `Обрано прикладів: ${caseRecords().length}. Нотатки зберігаються у цьому браузері.`);
       refreshCaseDependentOutputs();
     } else {
       removeCaseRecord(id, input);
@@ -727,8 +533,9 @@
     savePortfolioSilently();
     refreshCaseDependentOutputs();
     const summary = transferStats ? `Перенесено принципів: ${transferStats.principles}; локальних перевірок: ${transferStats.localChecks}; пропущено: ${transferStats.skipped}.` : '';
-    caseTransferStatus.textContent = message || `${summary} Ви залишаєтеся на цій сторінці й самі керуєте переходом до практичної картки.`;
-    caseTransferStatus.className = 'feedback is-correct';
+    const transferMessage = message || `${summary} Ви залишаєтеся на цій сторінці й самі керуєте переходом до практичної картки.`;
+    Core.notify(caseTransferStatus, 'success', transferMessage);
+    Core.announce('success', 'Збережено у Вашій практичній картці.');
     pendingTransferConflicts = [];
     transferStats = null;
     if (transferDialog?.open) transferDialog.close();
@@ -744,8 +551,7 @@
     transferTargetLabel.textContent = `Поточне значення поля «${conflict.targetLabel}»`;
     transferExisting.textContent = conflict.targetField.value.trim();
     transferIncoming.textContent = conflict.record.principle.trim();
-    transferDialog.showModal();
-    transferMergeButton.focus();
+    Core.openDialog(transferDialog, { invoker: caseTransferButton, initialFocus: transferMergeButton });
   }
 
   function resolveTransferConflict(strategy) {
@@ -769,8 +575,7 @@
   caseTransferButton?.addEventListener('click', () => {
     const records = caseRecordsForOutput();
     if (!records.length) {
-      caseTransferStatus.textContent = 'Оберіть приклади й запишіть хоча б один висновок.';
-      caseTransferStatus.className = 'feedback is-incorrect';
+      Core.notify(caseTransferStatus, 'warning', 'Оберіть приклади й запишіть хоча б один висновок.');
       return;
     }
     const principleFields = [
@@ -818,9 +623,9 @@
     if (transferDialog?.open) transferDialog.close();
     savePortfolioSilently();
     refreshCaseDependentOutputs();
-    caseTransferStatus.textContent = stats ? `Перенесення зупинено. Уже додано принципів: ${stats.principles}; локальних перевірок: ${stats.localChecks}.` : 'Перенесення скасовано.';
-    caseTransferStatus.className = 'feedback';
+    Core.notify(caseTransferStatus, 'info', stats ? `Перенесення зупинено. Уже додано принципів: ${stats.principles}; локальних перевірок: ${stats.localChecks}.` : 'Перенесення скасовано.');
   }));
+  Core.registerDialog(transferDialog, { returnFocus: caseTransferButton, closeOnOverlay: false, closeOnEscape: true });
   transferDialog?.addEventListener('close', () => caseTransferButton?.focus());
   transferDialog?.addEventListener('click', (event) => {
     if (event.target === transferDialog) {
@@ -835,6 +640,7 @@
   restoreCaseState();
   renderSelectedCaseNotes();
   updateCaseCommunityName();
+  if (caseRecords().length) Core.announce('info', 'Вибрані кейси та нотатки відновлено.', { timeout: 4200 });
 
   // Interactive concept matching.
   const scenarios = [...document.querySelectorAll('.scenario')];
@@ -918,6 +724,8 @@
   const portfolioForm = document.getElementById('portfolio-form');
   const portfolioStatus = document.getElementById('portfolio-status');
   const portfolioSummary = document.getElementById('portfolio-summary');
+  const portfolioEmptyState = document.getElementById('portfolio-empty-state');
+  const pdfActionHint = document.getElementById('pdf-action-hint');
   const portfolioSummaryList = document.getElementById('portfolio-summary-list');
   const portfolioDate = document.getElementById('portfolio-date');
   const portfolioSummaryVision = document.getElementById('portfolio-summary-vision');
@@ -945,11 +753,11 @@
   };
 
   function formDataObject() {
-    return Object.fromEntries(portfolioFields.map((field) => [field.name, field.value]));
+    return Core.serializeForm(portfolioForm);
   }
 
   function formHasContent() {
-    return portfolioFields.some((field) => field.value.trim());
+    return Core.formHasContent(portfolioForm);
   }
 
   function savePortfolioSilently() {
@@ -958,8 +766,9 @@
 
   function savePortfolio() {
     const saved = safeStorage.set(FORM_KEY, JSON.stringify(formDataObject()));
-    portfolioStatus.textContent = saved ? 'Відповіді збережено у цьому браузері.' : 'Відповіді залишаються у формі, але браузер не дозволив локальне збереження.';
-    portfolioStatus.className = saved ? 'feedback is-correct' : 'feedback is-incorrect';
+    const message = saved ? 'Збережено у Вашій практичній картці.' : 'Відповіді залишаються у формі, але браузер не дозволив локальне збереження.';
+    Core.notify(portfolioStatus, saved ? 'success' : 'error', message);
+    Core.announce(saved ? 'success' : 'error', message);
   }
 
   function normalizeStorageFieldName(value) {
@@ -1025,25 +834,24 @@
 
     if (imported) {
       savePortfolioSilently();
-      portfolioStatus.textContent = 'Доступний контекст із попереднього заняття підставлено до порожніх полів. Ви можете відредагувати його.';
-      portfolioStatus.className = 'feedback is-correct';
+      Core.notify(portfolioStatus, 'success', 'Доступний контекст із попереднього заняття підставлено до порожніх полів. Ви можете відредагувати його.');
+      Core.announce('info', 'Дані з попереднього заняття відновлено у порожніх полях.', { timeout: 5000 });
     }
     return imported;
   }
 
   function restorePortfolio() {
     const raw = safeStorage.get(FORM_KEY);
+    let restored = 0;
     if (raw) {
       try {
-        const data = JSON.parse(raw);
-        portfolioFields.forEach((field) => {
-          if (typeof data[field.name] === 'string') field.value = data[field.name];
-        });
+        restored = Core.restoreForm(portfolioForm, JSON.parse(raw));
       } catch (error) {
         safeStorage.remove(FORM_KEY);
       }
     }
-    importLesson01Context();
+    const imported = importLesson01Context();
+    if (restored > 0 && !imported) Core.announce('info', 'Дані практичної картки відновлено.', { timeout: 4200 });
   }
 
   function buildAiPrompt(mode = 'facts') {
@@ -1171,6 +979,7 @@ ${selectedCaseContext}`;
     renderCaseSummary();
     portfolioDate.textContent = new Date().toLocaleDateString('uk-UA');
     portfolioSummary.hidden = false;
+    if (portfolioEmptyState) portfolioEmptyState.hidden = true;
     printPortfolioButton.disabled = false;
     aiPromptText.textContent = currentAiPrompt();
   }
@@ -1179,6 +988,7 @@ ${selectedCaseContext}`;
     savePortfolioSilently();
     updateCaseCommunityName();
     aiPromptText.textContent = currentAiPrompt();
+    updateAiContextSummary();
     if (!portfolioSummary.hidden) renderPortfolioSummary();
   }));
 
@@ -1192,8 +1002,10 @@ ${selectedCaseContext}`;
   async function printPortfolio(event) {
     const button = event && event.currentTarget ? event.currentTarget : printPortfolioButton;
     renderPortfolioSummary();
+    if (pdfActionHint) pdfActionHint.hidden = false;
+    Core.notify(portfolioStatus, 'info', 'У вікні браузера оберіть «Зберегти як PDF».');
     const data = formDataObject();
-    const community = window.UCANInterface.sanitizeFilename(data.communityName);
+    const community = Core.sanitizeFilename(data.communityName);
     const pdfData = {
       communityName: data.communityName,
       climateChallenge: data.climateChallenge,
@@ -1206,7 +1018,7 @@ ${selectedCaseContext}`;
       principles: [data.principle1, data.principle2, data.principle3].filter(Boolean).join('\n'),
       managementSignal: data.managementSignal
     };
-    await window.UCANInterface.downloadPortfolioPdf({
+    await Core.downloadPortfolioPdf({
       button,
       status: portfolioStatus,
       title: 'Картка кліматично нейтральної візії громади',
@@ -1238,30 +1050,77 @@ ${selectedCaseContext}`;
   });
   window.addEventListener('afterprint', () => document.body.classList.remove('print-portfolio'));
 
+  const prepareAiPromptButton = document.getElementById('prepare-ai-prompt');
+  const aiContextSummaryText = document.getElementById('ai-context-summary-text');
   const currentAiPrompt = () => buildAiPrompt(document.querySelector('input[name="l02-ai-mode"]:checked')?.value || 'facts');
+  let aiPreparedOnce = false;
+
+  function updateAiContextSummary() {
+    const filledFields = portfolioFields.filter((field) => field.value.trim()).length;
+    const selectedCases = caseRecordsForOutput().length;
+    if (!aiContextSummaryText) return;
+    if (!filledFields && !selectedCases) {
+      aiContextSummaryText.textContent = 'практична картка ще не заповнена.';
+      return;
+    }
+    aiContextSummaryText.textContent = `${filledFields} заповнених полів практичної картки; кейсів із нотатками: ${selectedCases}.`;
+  }
+
+  async function prepareAiPrompt() {
+    Core.setActionState(prepareAiPromptButton, 'loading', { idle: aiPreparedOnce ? '🔄 Оновити запит' : '✨ Підготувати запит', loading: 'Готуємо запит…' });
+    if (aiPromptText) aiPromptText.setAttribute('aria-busy', 'true');
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+    try {
+      const prompt = currentAiPrompt();
+      aiPromptText.textContent = prompt;
+      updateAiContextSummary();
+      aiPreparedOnce = true;
+      const hasContext = formHasContent() || caseRecordsForOutput().length > 0;
+      Core.notify(aiPromptStatus, hasContext ? 'success' : 'warning', hasContext
+        ? 'Запит підготовлено. Перегляньте його, скопіюйте та вставте у вибраний AI-чат.'
+        : 'Запит підготовлено, але практична картка ще порожня. Спочатку додайте власний контекст.');
+      Core.setActionState(prepareAiPromptButton, hasContext ? 'success' : 'warning', {
+        idle: '🔄 Оновити запит', success: '✓ Запит підготовлено', warning: 'Перевірте контекст'
+      });
+      window.setTimeout(() => Core.setActionState(prepareAiPromptButton, 'idle', { idle: '🔄 Оновити запит' }), 1500);
+    } catch (error) {
+      console.error('AI prompt preparation failed', error);
+      Core.notify(aiPromptStatus, 'error', 'Не вдалося підготувати запит. Дані картки збережені; спробуйте ще раз.');
+      Core.setActionState(prepareAiPromptButton, 'error', { idle: '🔄 Спробувати ще раз', error: 'Помилка підготовки' });
+      window.setTimeout(() => Core.setActionState(prepareAiPromptButton, 'idle', { idle: '🔄 Спробувати ще раз' }), 1700);
+    } finally {
+      aiPromptText?.removeAttribute('aria-busy');
+    }
+  }
+
+  prepareAiPromptButton?.addEventListener('click', prepareAiPrompt);
+
   document.querySelectorAll('[data-ai-platform]').forEach((link) => link.addEventListener('click', () => {
     const platform = link.dataset.aiPlatform || 'AI-платформу';
-    aiPromptStatus.textContent = `${platform} відкривається в новій вкладці. Вставте скопійований запит у чат і самостійно перевірте результат.`;
-    aiPromptStatus.className = 'feedback';
+    Core.notify(aiPromptStatus, 'info', `${platform} відкривається в новій вкладці. Вставте скопійований запит у чат і самостійно перевірте результат.`);
   }));
-  document.querySelectorAll('input[name="l02-ai-mode"]').forEach(input => input.addEventListener('change', () => { aiPromptText.textContent = currentAiPrompt(); aiPromptStatus.textContent = 'Режим змінено. Запит оновлено.'; input.focus(); }));
+
+  document.querySelectorAll('input[name="l02-ai-mode"]').forEach(input => input.addEventListener('change', () => {
+    aiPromptText.textContent = currentAiPrompt();
+    updateAiContextSummary();
+    Core.notify(aiPromptStatus, 'info', 'Режим змінено. Запит оновлено; перегляньте його перед копіюванням.');
+  }));
 
   copyAiPromptButton.addEventListener('click', async () => {
     const prompt = currentAiPrompt();
     aiPromptText.textContent = prompt;
+    Core.setActionState(copyAiPromptButton, 'loading', { idle: '📋 Скопіювати запит', loading: 'Копіюємо…' });
     try {
-      await window.UCANInterface.copyText(prompt);
-      aiPromptStatus.textContent = 'Скопійовано';
-      const originalLabel = copyAiPromptButton.textContent;
-      copyAiPromptButton.textContent = 'Скопійовано';
-      window.setTimeout(() => { copyAiPromptButton.textContent = originalLabel; }, 1600);
-      aiPromptStatus.className = 'feedback is-correct';
+      await Core.copyText(prompt);
+      Core.notify(aiPromptStatus, 'success', 'Скопійовано. Відкрийте ChatGPT або Gemini та вставте запит у чат.');
+      Core.setActionState(copyAiPromptButton, 'success', { idle: '📋 Скопіювати запит', success: 'Скопійовано' });
+      window.setTimeout(() => Core.setActionState(copyAiPromptButton, 'idle', { idle: '📋 Скопіювати запит' }), 1600);
     } catch (error) {
-      aiPromptStatus.textContent = 'Автоматичне копіювання недоступне. Відкрийте попередній перегляд і скопіюйте текст вручну.';
-      aiPromptStatus.className = 'feedback is-incorrect';
+      Core.notify(aiPromptStatus, 'error', 'Автоматичне копіювання недоступне. Відкрийте попередній перегляд і скопіюйте текст вручну.');
+      Core.setActionState(copyAiPromptButton, 'error', { idle: '📋 Спробувати копіювання ще раз', error: 'Не скопійовано' });
+      window.setTimeout(() => Core.setActionState(copyAiPromptButton, 'idle', { idle: '📋 Спробувати копіювання ще раз' }), 1800);
     }
   });
-
 
   const previewAiPromptButton = document.getElementById('preview-ai-prompt');
   const aiPromptDialog = document.getElementById('ai-prompt-dialog');
@@ -1273,21 +1132,19 @@ ${selectedCaseContext}`;
   previewAiPromptButton?.addEventListener('click', () => {
     aiPromptDialogContent.textContent = currentAiPrompt();
     aiDialogStatus.textContent = '';
-    aiPromptDialog.showModal();
-    aiPromptDialogContent.focus();
+    Core.openDialog(aiPromptDialog, { invoker: previewAiPromptButton, initialFocus: aiPromptDialogContent });
   });
-  closeAiPromptDialogButton?.addEventListener('click', () => aiPromptDialog.close());
-  aiPromptDialog?.addEventListener('close', () => previewAiPromptButton?.focus());
-  aiPromptDialog?.addEventListener('click', (event) => { if (event.target === aiPromptDialog) aiPromptDialog.close(); });
+  Core.registerDialog(aiPromptDialog, { returnFocus: previewAiPromptButton, initialFocus: aiPromptDialogContent });
+  closeAiPromptDialogButton?.addEventListener('click', () => Core.closeDialog(aiPromptDialog, 'button'));
   copyAiPromptDialogButton?.addEventListener('click', async () => {
     try {
-      await window.UCANInterface.copyText(currentAiPrompt());
-      aiDialogStatus.textContent = 'Скопійовано';
+      await Core.copyText(currentAiPrompt());
+      Core.notify(aiDialogStatus, 'success', 'Скопійовано.');
       const originalLabel = copyAiPromptDialogButton.textContent;
       copyAiPromptDialogButton.textContent = 'Скопійовано';
       window.setTimeout(() => { copyAiPromptDialogButton.textContent = originalLabel; }, 1600);
     } catch (error) {
-      aiDialogStatus.textContent = 'Автоматичне копіювання недоступне. Виділіть текст і скопіюйте його вручну.';
+      Core.notify(aiDialogStatus, 'error', 'Автоматичне копіювання недоступне. Виділіть текст і скопіюйте його вручну.');
     }
   });
 
@@ -1295,22 +1152,14 @@ ${selectedCaseContext}`;
   const imageLightboxImage = document.getElementById('image-lightbox-image');
   const imageLightboxCaption = document.getElementById('image-lightbox-caption');
   const closeImageLightboxButton = document.getElementById('close-image-lightbox');
-  let imageLightboxInvoker = null;
-  document.querySelectorAll('.image-zoom-trigger').forEach((trigger) => {
-    trigger.addEventListener('click', () => {
-      const sourceImage = trigger.querySelector('img');
-      imageLightboxInvoker = trigger;
-      imageLightboxImage.src = trigger.dataset.imageSrc || sourceImage?.src || '';
-      imageLightboxImage.alt = sourceImage?.alt || '';
-      imageLightboxCaption.textContent = trigger.dataset.imageCaption || sourceImage?.alt || '';
-      imageLightbox.showModal();
-      closeImageLightboxButton.focus();
-    });
+  Core.initImageViewer({
+    dialog: imageLightbox,
+    image: imageLightboxImage,
+    caption: imageLightboxCaption,
+    closeButton: closeImageLightboxButton,
+    triggers: document.querySelectorAll('.image-zoom-trigger')
   });
-  closeImageLightboxButton?.addEventListener('click', () => imageLightbox.close());
-  imageLightbox?.addEventListener('click', (event) => { if (event.target === imageLightbox) imageLightbox.close(); });
-  imageLightbox?.addEventListener('close', () => imageLightboxInvoker?.focus());
-
+  closeImageLightboxButton?.addEventListener('click', () => Core.closeDialog(imageLightbox, 'button'));
 
 
   clearPortfolioButton.addEventListener('click', () => {
@@ -1320,6 +1169,8 @@ ${selectedCaseContext}`;
     updateCaseCommunityName();
     safeStorage.remove(FORM_KEY);
     portfolioSummary.hidden = true;
+    if (portfolioEmptyState) portfolioEmptyState.hidden = false;
+    if (pdfActionHint) pdfActionHint.hidden = true;
     printPortfolioButton.disabled = true;
     aiPromptText.textContent = currentAiPrompt();
     portfolioStatus.textContent = 'Форму очищено.';
@@ -1329,7 +1180,9 @@ ${selectedCaseContext}`;
   restorePortfolio();
   updateCaseCommunityName();
   aiPromptText.textContent = currentAiPrompt();
+  updateAiContextSummary();
   if (formHasContent()) renderPortfolioSummary();
+  else if (portfolioEmptyState) portfolioEmptyState.hidden = false;
 
   // Final test — Assessment Correction Addendum v1.0.
   const finalTest = document.getElementById('final-test');
