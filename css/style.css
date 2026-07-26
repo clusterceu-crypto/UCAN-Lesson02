@@ -351,55 +351,11 @@ select {
 }
 
 
-/* Patch 03.1 — visible AI instructions and calm timing */
-.ai-steps {
-  margin: .4rem 0 1rem;
-  padding-left: 1.35rem;
-}
-.ai-steps li { margin: .45rem 0; }
-.ai-actions { margin-top: 1rem; }
-.prompt-instruction {
-  margin: .8rem 0;
-  color: var(--muted);
-}
-.prompt-preview pre {
-  max-height: 28rem;
-  overflow: auto;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  user-select: text;
-}
-@media (max-width: 640px) {
-  .ai-actions { display: grid; grid-template-columns: 1fr; }
-  .ai-actions .button { width: 100%; justify-content: center; }
-}
-
-
 /* Patch 03.3 — terminology clarity and calmer visual scale */
 .term-definition { margin: 1rem 0 1.2rem; }
 .term-definition [lang="en"] { font-style: italic; }
 @media (max-width: 640px) {
   .hero-visual, .portrait-visual { max-width: 100%; }
-}
-
-/* AI Support Page Harmonization Sprint 01 */
-.ai-support-canonical, .ai-prompt-grid { max-width: 980px; margin-inline: auto; }
-.ai-mode-selector { border: 0; padding: 0; margin: 1.25rem 0; display: grid; gap: .75rem; }
-.ai-mode-selector legend { font-weight: 700; margin-bottom: .5rem; }
-.ai-mode-option, .choice-card { min-height: 44px; display: flex; gap: .75rem; align-items: flex-start; padding: .85rem 1rem; border: 1px solid var(--border, #b8c5d1); border-radius: .75rem; cursor: pointer; }
-.ai-mode-option:has(input:checked), .choice-card:has(input:checked) { outline: 3px solid #2f7f70; outline-offset: 2px; }
-.ai-mode-option input, .choice-card input { margin-top: .2rem; min-width: 1.25rem; min-height: 1.25rem; }
-.ai-prompt-preview { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 24rem; overflow: auto; padding: 1rem; border-radius: .75rem; background: #f4f7f9; border: 1px solid #c8d3dc; }
-.safety-boundary { margin-top: 1rem; }
-.ai-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
-@media (max-width: 560px) { .ai-actions > * { width: 100%; justify-content: center; } .ai-prompt-preview { max-height: none; } }
-@media print { .ai-support-canonical, [data-page-role="support"] { display: none !important; } }
-
-/* AI Support Page Harmonization Sprint 01: explicit keyboard focus */
-.ai-mode-option:focus-within,
-.choice-card:focus-within {
-  outline: 3px solid #123f68;
-  outline-offset: 3px;
 }
 
 /* Interface Harmonization Sprint 02 */
@@ -408,11 +364,7 @@ select {
 .screen-number,.time-hint,.duration{display:none!important}
 .ai-practical-block{margin-top:2.25rem;padding-top:1.5rem;border-top:1px solid #d8e2e8;background:#fff}
 .ai-practical-block .ai-section-title{margin:.25rem 0 .75rem;max-width:48rem}
-.ai-practical-block .ai-mode-selector,.ai-practical-block fieldset{margin-top:1rem}
-.ai-practical-block .ai-prompt-preview{max-width:100%;overflow-wrap:anywhere;white-space:pre-wrap}
-.ai-practical-block .ai-actions{display:flex;flex-wrap:wrap;gap:.75rem}
 .ai-practical-block .safety-boundary{border-left:4px solid #b66a2c;border-top:0;border-right:0;border-bottom:0;border-radius:0}
-@media(max-width:520px){.ai-practical-block .ai-actions>*{width:100%;justify-content:center}}
 
 
 /* Canonical interface layer merged from Candidate B. */
@@ -752,16 +704,6 @@ body[data-ucan-interface="1.0"] .visually-hidden {
   white-space: nowrap !important;
   border: 0 !important;
 }
-body[data-ucan-interface="1.0"] .ai-mode-panel { display: grid; gap: 1rem; }
-body[data-ucan-interface="1.0"] .ai-mode-selector { display: grid; gap: 0.75rem; padding: 0; border: 0; }
-body[data-ucan-interface="1.0"] .ai-mode-selector legend { margin-bottom: 0.5rem; color: var(--ucan-ui-blue-900); font-weight: 800; }
-body[data-ucan-interface="1.0"] .ai-mode-option { display: grid; grid-template-columns: auto 1fr; gap: 0.75rem; align-items: start; padding: 0.9rem; background: var(--ucan-ui-white); border: 1px solid var(--ucan-ui-grey-300); border-radius: 12px; cursor: pointer; }
-body[data-ucan-interface="1.0"] .ai-mode-option:has(input:checked) { border-color: var(--ucan-ui-blue-900); box-shadow: 0 0 0 2px var(--ucan-ui-blue-100); }
-body[data-ucan-interface="1.0"] .ai-mode-option span { display: grid; gap: 0.2rem; }
-body[data-ucan-interface="1.0"] .ai-mode-option strong { color: var(--ucan-ui-blue-900); }
-body[data-ucan-interface="1.0"] .ai-dialog-inner { padding: 1.25rem; }
-body[data-ucan-interface="1.0"] .ai-dialog-prompt { width: 100%; min-height: 50vh; padding: 1rem; }
-body[data-ucan-interface="1.0"] .ai-dialog-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
 body[data-ucan-interface="1.0"] .lesson-nav { top: auto !important; }
 body[data-ucan-interface="1.0"] .site-header .brand { background: transparent !important; padding: 0 !important; border-radius: 0 !important; width: auto !important; height: auto !important; }
 
@@ -966,3 +908,59 @@ body.is-completed .progress-fill { background: var(--green, #2d7b55); }
   #case-transfer,
   #case-transfer-status { display: none !important; }
 }
+
+/* Lesson 02 v2.5 — corrective learner-facing UX. */
+.required-note {
+  margin: 0;
+  padding: .75rem 1rem;
+  border-left: 4px solid var(--green);
+  background: var(--green-soft);
+  color: var(--navy-deep);
+}
+input[aria-invalid="true"], textarea[aria-invalid="true"] {
+  border-color: #a33a2b;
+  box-shadow: 0 0 0 2px rgba(163, 58, 43, .14);
+}
+.ai-scenario-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+.ai-scenario-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  background: var(--gray-050);
+}
+.ai-scenario-card h3 { margin-top: 0; color: var(--navy-deep); }
+.ai-scenario-card p { overflow-wrap: anywhere; }
+.ai-scenario-card .button {
+  width: 100%;
+  min-height: 44px;
+  margin-top: auto;
+  justify-content: center;
+}
+.ai-scenario-card .button.is-success { background: var(--green); border-color: var(--green); color: var(--white); }
+.ai-copy-status {
+  min-height: 1.5rem;
+  margin: .55rem 0 0;
+  font-weight: 700;
+}
+.ai-copy-status.is-success { color: #1f6a46; }
+.ai-copy-status.is-warning { color: #805500; }
+.ai-copy-status.is-error { color: #9d2f24; }
+.ai-service-block { margin-top: 1.25rem; }
+.ai-service-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.ai-service-actions .button { text-decoration: none; }
+@media (max-width: 900px) {
+  .ai-scenario-list { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .ai-service-actions { display: grid; grid-template-columns: 1fr; }
+  .ai-service-actions .button { width: 100%; justify-content: center; }
+}
+

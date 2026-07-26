@@ -313,7 +313,7 @@
 </fieldset>
 <div class="interactive-actions">
 <button class="button button-secondary" id="scenario-prev" type="button">Попередня ситуація</button>
-<button class="button button-primary" id="scenario-check" type="button">✅ Перевірити відповіді</button>
+<button class="button button-primary" id="scenario-check" type="button">✅ Перевірити відповідь</button>
 <button class="button button-secondary" id="scenario-next" type="button">Наступна ситуація</button>
 </div>
 <div aria-live="polite" class="feedback" id="scenario-feedback" role="status"></div>
@@ -353,31 +353,32 @@
 <article><h2>Крок 1. Візьміть кліматичний виклик із попереднього заняття</h2><p>Запишіть проблему, яку громада визначила як головний кліматичний або ресурсний виклик. Уточніть, кого вона зачіпає, які послуги або об’єкти під ризиком і які наслідки виникають.</p></article>
 <article><h2>Крок 2. Створіть попередній ескіз бажаного стану</h2><p>Коротко опишіть, якою має стати громада після подолання визначеного виклику. Це підготовчий ескіз для фінального формулювання кліматично нейтральної візії.</p></article>
 <article><h2>Крок 3. Визначте три принципи майбутніх рішень</h2><ul><li>Який принцип стійкості має бути обов’язковим?</li><li>Де природоорієнтовані рішення (NBS) можуть бути частиною рішення або перевірки?</li><li>Яку ресурсну втрату може зменшити циркулярна логіка?</li></ul></article>
-<article><h2>Крок 4. Заповніть форму</h2><p>Відповіді зберігаються у цьому браузері. Після збереження Ви отримаєте картку для друку, PDF та аналізу з AI-помічником.</p></article>
+<article><h2>Крок 4. Заповніть і збережіть картку</h2><p>Відповіді зберігаються у цьому браузері. Після збереження Ви зможете завантажити картку у PDF та перевірити її логіку за допомогою ШІ.</p></article>
 </div>
-<form class="portfolio-form" id="portfolio-form" novalidate="">
-<div class="form-field"><label for="community-name">Назва громади</label><input autocomplete="organization" id="community-name" name="communityName" type="text"/></div>
-<div class="form-field"><label for="climate-challenge">Головний кліматичний виклик із попереднього заняття</label><textarea id="climate-challenge" name="climateChallenge" rows="4"></textarea></div>
-<div class="form-field"><label for="community-vision">Попередній ескіз бажаного стану громади</label><p id="community-vision-help">Коротко опишіть, якою має стати громада після подолання визначеного виклику. Нижче Ви сформулюєте фінальну інтегровану візію.</p><textarea aria-describedby="community-vision-help" id="community-vision" name="communityVision" rows="4"></textarea></div>
-<div class="form-field"><label for="resilience-role">Що означає кліматична стійкість для цієї візії?</label><textarea id="resilience-role" name="resilienceRole" rows="4"></textarea></div>
-<div class="form-field"><label for="nbs-role">Яку роль можуть відіграти природоорієнтовані рішення?</label><textarea id="nbs-role" name="nbsRole" rows="4"></textarea></div>
-<div class="form-field"><label for="resource-loss">Яку ресурсну втрату має зменшити циркулярна економіка?</label><textarea id="resource-loss" name="resourceLoss" rows="4"></textarea></div>
+<form aria-describedby="portfolio-required-note" class="portfolio-form" id="portfolio-form" novalidate="">
+<p class="required-note" id="portfolio-required-note"><span aria-hidden="true">*</span> Усі поля картки обов’язкові для завершення практичного завдання.</p>
+<div class="form-field"><label for="community-name">Назва громади <span aria-hidden="true">*</span></label><input aria-required="true" autocomplete="organization" id="community-name" name="communityName" required="" type="text"/></div>
+<div class="form-field"><label for="climate-challenge">Головний кліматичний виклик із попереднього заняття <span aria-hidden="true">*</span></label><textarea aria-required="true" id="climate-challenge" name="climateChallenge" required="" rows="4"></textarea></div>
+<div class="form-field"><label for="community-vision">Попередній ескіз бажаного стану громади <span aria-hidden="true">*</span></label><p id="community-vision-help">Коротко опишіть, якою має стати громада після подолання визначеного виклику. Нижче Ви сформулюєте фінальну інтегровану візію.</p><textarea aria-describedby="community-vision-help" aria-required="true" id="community-vision" name="communityVision" required="" rows="4"></textarea></div>
+<div class="form-field"><label for="resilience-role">Що означає кліматична стійкість для цієї візії? <span aria-hidden="true">*</span></label><textarea aria-required="true" id="resilience-role" name="resilienceRole" required="" rows="4"></textarea></div>
+<div class="form-field"><label for="nbs-role">Яку роль можуть відіграти природоорієнтовані рішення? <span aria-hidden="true">*</span></label><textarea aria-required="true" id="nbs-role" name="nbsRole" required="" rows="4"></textarea></div>
+<div class="form-field"><label for="resource-loss">Яку ресурсну втрату має зменшити циркулярна економіка? <span aria-hidden="true">*</span></label><textarea aria-required="true" id="resource-loss" name="resourceLoss" required="" rows="4"></textarea></div>
 <fieldset class="principles-fieldset">
-<legend>Які 3 принципи мають пройти через майбутні рішення?</legend>
-<label for="principle-1">Принцип 1</label><input id="principle-1" name="principle1" type="text"/>
-<label for="principle-2">Принцип 2</label><input id="principle-2" name="principle2" type="text"/>
-<label for="principle-3">Принцип 3</label><input id="principle-3" name="principle3" type="text"/>
+<legend>Які 3 принципи мають пройти через майбутні рішення? <span aria-hidden="true">*</span></legend>
+<label for="principle-1">Принцип 1</label><input aria-required="true" id="principle-1" name="principle1" required="" type="text"/>
+<label for="principle-2">Принцип 2</label><input aria-required="true" id="principle-2" name="principle2" required="" type="text"/>
+<label for="principle-3">Принцип 3</label><input aria-required="true" id="principle-3" name="principle3" required="" type="text"/>
 </fieldset>
-<div class="form-field"><label for="management-signal">Який перший управлінський сигнал можна дати команді?</label><textarea id="management-signal" name="managementSignal" rows="4"></textarea></div>
+<div class="form-field"><label for="management-signal">Який перший управлінський сигнал можна дати команді? <span aria-hidden="true">*</span></label><textarea aria-required="true" id="management-signal" name="managementSignal" required="" rows="4"></textarea></div>
 <div class="form-field">
-<label for="climate-neutral-vision">Фінальна кліматично нейтральна візія Вашої громади</label>
+<label for="climate-neutral-vision">Фінальна кліматично нейтральна візія Вашої громади <span aria-hidden="true">*</span></label>
 <p id="climate-neutral-vision-help">Спираючись на визначений виклик, приклади інших міст та обрані принципи, сформулюйте одним або двома реченнями бажаний майбутній стан Вашої громади.</p>
-<textarea aria-describedby="climate-neutral-vision-help" id="climate-neutral-vision" name="climateNeutralVision" placeholder="Наша громада прагне стати…" rows="5"></textarea>
+<textarea aria-describedby="climate-neutral-vision-help" aria-required="true" id="climate-neutral-vision" name="climateNeutralVision" placeholder="Наша громада прагне стати…" required="" rows="5"></textarea>
 </div>
 <div class="form-actions">
-<button class="button button-primary" type="submit">💾 Зберегти карту</button>
-<button class="button button-secondary" disabled="" id="print-portfolio" type="button">📄 Завантажити мою картку PDF</button>
-<button class="button button-danger" id="clear-portfolio" type="button">🗑️ Очистити практичне завдання</button>
+<button class="button button-primary" type="submit">💾 Зберегти картку</button>
+<button class="button button-secondary" disabled="" id="print-portfolio" type="button">📄 Завантажити картку у PDF</button>
+<button class="button button-danger" id="clear-portfolio" type="button">🗑️ Очистити поля картки</button>
 </div>
 <div aria-live="polite" class="feedback" id="portfolio-status" role="status"></div>
 </form>
@@ -407,7 +408,29 @@
 <li>Картку можна використати як основу для наступного заняття про технології та цифровізацію.</li>
 </ul>
 </section>
-<div class="page-shell ai-practical-block"><div class="ucan-block-label">AI-ПІДТРИМКА</div><h2 class="ai-section-title">AI-підтримка (необов’язково)</h2><p class="lead">Використайте ШІ після того, як сформулювали власну відповідь. ШІ може допомогти перевірити логіку, поставити уточнювальні питання або знайти слабкі місця, але не ухвалює рішення замість Вас.</p><p>Запит формується з полів артефакту та збережених Вами висновків із вибраних кейсів. Дані не передаються автоматично.</p><ol class="ai-steps" aria-label="Послідовність роботи з AI-підтримкою"><li>Оберіть режим.</li><li>Перегляньте запит.</li><li>Скопіюйте запит.</li><li>Відкрийте ChatGPT або Gemini.</li><li>Вставте запит у чат.</li><li>Перевірте результат самостійно.</li></ol><fieldset aria-describedby="l02-ai-safety" class="ai-mode-selector"><legend>Оберіть режим AI-підтримки</legend><label class="ai-mode-option choice-card"><input checked="" name="l02-ai-mode" type="radio" value="facts"/><span>Перевірити факти й припущення</span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="questions"/><span>Поставити уточнювальні питання</span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="structure"/><span>Перевірити повноту та слабкі місця рішення</span></label></fieldset><h2>Попередній перегляд запиту</h2><pre aria-label="Підготовлений запит для ШІ" class="ai-prompt-preview" id="ai-prompt-text" tabindex="0">Заповніть практичну форму та оберіть режим підтримки.</pre><div class="button-row ai-actions"><button class="button button-primary" id="copy-ai-prompt" type="button">📋 Скопіювати запит</button><a aria-label="Відкрити ChatGPT у новій вкладці" class="button button-external" data-ai-platform="ChatGPT" href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank">🤖 Відкрити ChatGPT ↗</a><a aria-label="Відкрити Gemini у новій вкладці" class="button button-external" data-ai-platform="Gemini" href="https://gemini.google.com/app" rel="noopener noreferrer" target="_blank">✨ Відкрити Gemini ↗</a></div><div aria-live="polite" class="feedback" id="ai-prompt-status" role="status"></div><aside class="callout safety-boundary" id="l02-ai-safety" role="note"><h2>Безпека та відповідальність</h2><p>Не вставляйте персональні дані, конфіденційну інформацію, службові документи або неперевірені чутливі дані.</p><p>Перевіряйте факти та зберігайте відповідальність за остаточне управлінське рішення.</p></aside></div></div>
+<div class="page-shell ai-practical-block" id="ai-assistant-block"><div class="ucan-block-label">ШІ-ПІДТРИМКА</div><h2 class="ai-section-title">ШІ-підтримка (необов’язково)</h2><p class="lead">Спочатку заповніть і збережіть практичну картку. Потім оберіть один зі сценаріїв нижче. ШІ допомагає перевірити й уточнити Ваші міркування, але не ухвалює рішення замість Вас.</p><p>Кожна кнопка створює окремий промпт з актуальних полів картки та збережених висновків із вибраних кейсів. Дані не передаються автоматично.</p>
+<div class="ai-scenario-list">
+<article aria-labelledby="ai-facts-title" class="ai-scenario-card">
+<h3 id="ai-facts-title">Перевірити факти й припущення</h3>
+<p>Відокремте твердження з Вашої картки від припущень і визначте, що потребує додаткових даних або перевірки.</p>
+<button class="button button-primary" data-ai-action="copy" data-ai-scenario="facts" type="button">Скопіювати промпт</button>
+<p aria-live="polite" class="ai-copy-status" data-ai-status="facts" role="status"></p>
+</article>
+<article aria-labelledby="ai-questions-title" class="ai-scenario-card">
+<h3 id="ai-questions-title">Поставити уточнювальні питання</h3>
+<p>Отримайте короткі запитання, які допоможуть самостійно уточнити кліматичну візію та управлінську логіку картки.</p>
+<button class="button button-primary" data-ai-action="copy" data-ai-scenario="questions" type="button">Скопіювати промпт</button>
+<p aria-live="polite" class="ai-copy-status" data-ai-status="questions" role="status"></p>
+</article>
+<article aria-labelledby="ai-structure-title" class="ai-scenario-card">
+<h3 id="ai-structure-title">Перевірити повноту та слабкі місця</h3>
+<p>Перевірте зв’язок між викликом, візією, стійкістю, природоорієнтованими рішеннями, циркулярністю, принципами та першим управлінським сигналом.</p>
+<button class="button button-primary" data-ai-action="copy" data-ai-scenario="structure" type="button">Скопіювати промпт</button>
+<p aria-live="polite" class="ai-copy-status" data-ai-status="structure" role="status"></p>
+</article>
+</div>
+<div class="ai-service-block"><p><strong>Наступний крок:</strong> після копіювання відкрийте вибраний ШІ-сервіс, вставте промпт у чат і перевірте відповідь самостійно.</p><div class="button-row ai-service-actions"><a aria-label="Відкрити ChatGPT у новій вкладці" class="button button-external" data-ai-platform="ChatGPT" href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank">Відкрити ChatGPT</a><a aria-label="Відкрити Gemini у новій вкладці" class="button button-external" data-ai-platform="Gemini" href="https://gemini.google.com/app" rel="noopener noreferrer" target="_blank">Відкрити Gemini</a></div><p aria-live="polite" class="feedback" id="ai-service-status" role="status"></p></div>
+<aside class="callout safety-boundary" id="l02-ai-safety" role="note"><h2>Безпека та відповідальність</h2><p>Не вставляйте персональні дані, конфіденційну інформацію, службові документи або неперевірені чутливі дані.</p><p>Перевіряйте факти та зберігайте відповідальність за остаточне управлінське рішення.</p></aside></div>
 </section>
 <section aria-labelledby="page-9-title" class="lesson-page" data-page="9" data-page-label="Підсумковий тест" id="page-9">
 <div class="page-shell ucan-page-card">
@@ -499,7 +522,7 @@
 </dialog><dialog aria-labelledby="portfolio-transfer-title" class="ucan-dialog" id="portfolio-transfer-dialog">
 <div class="dialog-card">
 <div class="dialog-header">
-<h2 id="portfolio-transfer-title">Захист заповненого Portfolio</h2>
+<h2 id="portfolio-transfer-title">Захист заповненої практичної картки</h2>
 <button aria-label="Скасувати решту перенесення" class="button button-secondary button-small" id="portfolio-transfer-cancel-top" type="button">Закрити</button>
 </div>
 <p>Цільове поле вже заповнене. Оберіть дію для поточного висновку; інші відповіді не буде змінено без Вашого рішення.</p>

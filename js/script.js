@@ -203,7 +203,7 @@
     const original = button.textContent;
     button.disabled = true;
     button.setAttribute('aria-busy', 'true');
-    button.textContent = 'Створення PDF…';
+    button.textContent = 'Створюємо PDF…';
     if (status) status.textContent = 'Створюємо PDF локально…';
     try {
       await new Promise(resolve => requestAnimationFrame(resolve));
@@ -232,7 +232,7 @@
   window.UCANInterface = Object.freeze(Interface);
 })();
 
-/* UCAN Lesson 02 UX Harmonization Hotfix v2.3 — Lesson 01 canonical PDF and prompt-copy UX. */
+/* UCAN Lesson 02 Consolidated Corrective Release v2.5. */
 (() => {
   'use strict';
 
@@ -352,6 +352,10 @@
 
   function showPage(pageNumber, options = {}) {
     const requested = normalizePage(pageNumber);
+
+    if (requested > 5 && !validateOtherCaseSelection({ focus: true })) return;
+
+    if (requested > 8 && !validatePortfolioRequired({ focus: true, announce: true })) return;
 
     if (requested === 10 && !testPassed && options.allowLocked !== true) {
       showPage(9, { replace: true, focus: true, allowLocked: true, bypassScenarioCheckpoint: true });
@@ -551,6 +555,37 @@
     return caseState.records.find((record) => record.id === OTHER_CASE_ID || record.id === OTHER_CASE_HIDDEN_ID) || null;
   }
 
+  function sourceRecordTitleMissing(record) {
+    return !record || !record.title || !record.title.trim();
+  }
+
+  function validateOtherCaseSelection({ focus = false } = {}) {
+    const record = storedOtherCaseRecord();
+    if (!record || record.id !== OTHER_CASE_ID || record.title.trim()) {
+      const field = document.getElementById('case-other-title');
+      if (field) {
+        field.removeAttribute('aria-invalid');
+        field.setCustomValidity('');
+      }
+      return true;
+    }
+    const field = document.getElementById('case-other-title');
+    if (field) {
+      field.setCustomValidity('Вкажіть назву власного прикладу.');
+      field.setAttribute('aria-invalid', 'true');
+      if (focus) {
+        field.focus({ preventScroll: true });
+        field.scrollIntoView({ behavior: scrollBehavior, block: 'center' });
+        if (typeof field.reportValidity === 'function') field.reportValidity();
+      }
+    }
+    if (caseSelectionStatus) {
+      caseSelectionStatus.textContent = 'Вкажіть назву власного прикладу або зніміть позначку «Інше».';
+      caseSelectionStatus.className = 'feedback is-incorrect';
+    }
+    return false;
+  }
+
   function caseRecordsForOutput() {
     return caseRecords().filter((record) => {
       if (record.id === OTHER_CASE_ID && !record.title.trim()) return false;
@@ -559,13 +594,13 @@
   }
 
   function caseRecordText(records = caseRecordsForOutput()) {
-    if (!records.length) return '[кейси не обрано або нотатки не заповнено]';
+    if (!records.length) return 'Висновки з кейсів не додано.';
     const communityName = document.getElementById('community-name')?.value.trim();
     const community = communityName ? `громаді «${communityName}»` : 'своїй громаді';
     return records.map((record, index) => `${index + 1}. ${record.title}
-- ${record.id === OTHER_CASE_ID ? 'Що вирішував приклад' : 'Що вирішувало місто'}: ${record.problem.trim() || '[не заповнено]'}
-- Корисний принцип: ${record.principle.trim() || '[не заповнено]'}
-- Що варто перевірити у ${community}: ${record.localCheck.trim() || '[не заповнено]'}`).join('\n\n');
+- ${record.id === OTHER_CASE_ID ? 'Що вирішував приклад' : 'Що вирішувало місто'}: ${record.problem.trim() || 'Не надано'}
+- Корисний принцип: ${record.principle.trim() || 'Не надано'}
+- Що варто перевірити у ${community}: ${record.localCheck.trim() || 'Не надано'}`).join('\n\n');
   }
 
   function updateCaseCommunityName() {
@@ -577,8 +612,6 @@
   }
 
   function refreshCaseDependentOutputs() {
-    const promptTarget = document.getElementById('ai-prompt-text');
-    if (promptTarget) promptTarget.textContent = buildAiPrompt(document.querySelector('input[name="l02-ai-mode"]:checked')?.value || 'facts');
     const summary = document.getElementById('portfolio-summary');
     if (summary && !summary.hidden) renderPortfolioSummary();
   }
@@ -656,8 +689,16 @@
         otherTitleInput.type = 'text';
         otherTitleInput.value = sourceRecord.title;
         otherTitleInput.autocomplete = 'off';
+        otherTitleInput.required = true;
+        otherTitleInput.setAttribute('aria-required', 'true');
         otherTitleInput.addEventListener('input', () => {
           sourceRecord.title = otherTitleInput.value;
+          otherTitleInput.setCustomValidity('');
+          otherTitleInput.removeAttribute('aria-invalid');
+          if (caseSelectionStatus) {
+            caseSelectionStatus.textContent = sourceRecord.title.trim() ? 'Назву прикладу збережено.' : 'Вкажіть назву власного прикладу.';
+            caseSelectionStatus.className = sourceRecord.title.trim() ? 'feedback is-correct' : 'feedback is-incorrect';
+          }
           const displayTitle = sourceRecord.title.trim() || 'Інше';
           heading.textContent = `${index + 1}. ${displayTitle}`;
           remove.setAttribute('aria-label', `Прибрати приклад «${displayTitle}»`);
@@ -727,8 +768,8 @@
         const titleInput = document.getElementById('case-other-title');
         if (titleInput) titleInput.focus();
         if (caseSelectionStatus) {
-          caseSelectionStatus.textContent = `Обрано прикладів: ${caseRecords().length}. Нотатки зберігаються у цьому браузері.`;
-          caseSelectionStatus.className = 'feedback is-correct';
+          caseSelectionStatus.textContent = sourceRecordTitleMissing(otherRecord) ? 'Вкажіть назву власного прикладу.' : `Обрано прикладів: ${caseRecords().length}. Нотатки зберігаються у цьому браузері.`;
+          caseSelectionStatus.className = sourceRecordTitleMissing(otherRecord) ? 'feedback is-incorrect' : 'feedback is-correct';
         }
         refreshCaseDependentOutputs();
       } else if (otherRecord) {
@@ -828,6 +869,7 @@
   }
 
   caseTransferButton?.addEventListener('click', () => {
+    if (!validateOtherCaseSelection({ focus: true })) return;
     const records = caseRecordsForOutput();
     if (!records.length) {
       caseTransferStatus.textContent = 'Оберіть приклади й запишіть хоча б один висновок.';
@@ -988,9 +1030,7 @@
   const editPortfolioButton = document.getElementById('edit-portfolio');
   const clearPortfolioButton = document.getElementById('clear-portfolio');
   const aiAssistantBlock = document.getElementById('ai-assistant-block');
-  const aiPromptText = document.getElementById('ai-prompt-text');
-  const copyAiPromptButton = document.getElementById('copy-ai-prompt');
-  const aiPromptStatus = document.getElementById('ai-prompt-status');
+  const aiServiceStatus = document.getElementById('ai-service-status');
   const portfolioFields = [...portfolioForm.querySelectorAll('input[type="text"], textarea')];
 
   const labels = {
@@ -1001,7 +1041,8 @@
     nbsRole: 'Яку роль можуть відіграти природоорієнтовані рішення?',
     resourceLoss: 'Яку ресурсну втрату має зменшити циркулярна економіка?',
     principles: 'Які 3 принципи мають пройти через майбутні рішення?',
-    managementSignal: 'Який перший управлінський сигнал можна дати команді?'
+    managementSignal: 'Який перший управлінський сигнал можна дати команді?',
+    climateNeutralVision: 'Фінальна кліматично нейтральна візія громади'
   };
 
   function formDataObject() {
@@ -1010,6 +1051,42 @@
 
   function formHasContent() {
     return portfolioFields.some((field) => field.value.trim());
+  }
+
+  function portfolioRequiredFields() {
+    return portfolioFields.filter((field) => field.required);
+  }
+
+  function portfolioIsComplete() {
+    return portfolioRequiredFields().every((field) => field.value.trim());
+  }
+
+  function fieldLabel(field) {
+    const label = document.querySelector(`label[for="${field.id}"]`);
+    if (label) return label.textContent.replace('*', '').trim();
+    if (field.id.startsWith('principle-')) return `Принцип ${field.id.slice(-1)}`;
+    return 'обов’язкове поле';
+  }
+
+  function validatePortfolioRequired({ focus = false, announce = false } = {}) {
+    const invalid = portfolioRequiredFields().filter((field) => !field.value.trim());
+    portfolioRequiredFields().forEach((field) => {
+      const missing = !field.value.trim();
+      field.toggleAttribute('aria-invalid', missing);
+      field.setCustomValidity(missing ? `Заповніть поле «${fieldLabel(field)}».` : '');
+    });
+    const complete = invalid.length === 0;
+    pdfDownloadButton.disabled = !complete;
+    if (!complete && announce && portfolioStatus) {
+      portfolioStatus.textContent = `Заповніть поле «${fieldLabel(invalid[0])}». Незавершених обов’язкових полів: ${invalid.length}.`;
+      portfolioStatus.className = 'feedback is-incorrect';
+    }
+    if (!complete && focus && invalid[0]) {
+      invalid[0].focus({ preventScroll: true });
+      invalid[0].scrollIntoView({ behavior: scrollBehavior, block: 'center' });
+      if (typeof invalid[0].reportValidity === 'function') invalid[0].reportValidity();
+    }
+    return complete;
   }
 
   function savePortfolioSilently() {
@@ -1092,92 +1169,109 @@
   }
 
   function restorePortfolio() {
+    let restored = false;
     const raw = safeStorage.get(FORM_KEY);
     if (raw) {
       try {
         const data = JSON.parse(raw);
         portfolioFields.forEach((field) => {
-          if (typeof data[field.name] === 'string') field.value = data[field.name];
+          if (typeof data[field.name] === 'string') {
+            field.value = data[field.name];
+            if (field.value.trim()) restored = true;
+          }
         });
       } catch (error) {
         safeStorage.remove(FORM_KEY);
       }
     }
-    importLesson01Context();
+    const imported = importLesson01Context();
+    if (restored && !imported && portfolioStatus) {
+      portfolioStatus.textContent = 'Збережені дані відновлено.';
+      portfolioStatus.className = 'feedback is-correct';
+    }
+    return restored || imported;
   }
 
   function buildAiPrompt(mode = 'facts') {
     const data = formDataObject();
-    const principles = [data.principle1, data.principle2, data.principle3].filter((value) => value && value.trim()).join('; ') || '[не заповнено]';
+    const valueOrMissing = (value) => value && value.trim() ? value.trim() : 'Не надано';
+    const principles = [data.principle1, data.principle2, data.principle3]
+      .filter((value) => value && value.trim())
+      .map((value, index) => `${index + 1}. ${value.trim()}`)
+      .join('\n') || 'Не надано';
     const selectedCaseContext = caseRecordText();
     const contracts = {
       facts: {
-        title: 'РЕЖИМ: ПЕРЕВІРКА ФАКТІВ І ПРИПУЩЕНЬ',
-        task: 'Проаналізуйте тільки наданий текст. Не переписуйте картку і не додавайте нових фактів.',
-        output: `Відповідь подайте у трьох блоках:
-1. «Твердження, що прямо містяться у картці».
-2. «Припущення або нечіткі твердження».
-3. «Що потребує даних або перевірки». Якщо таких пунктів немає, напишіть «Не виявлено».`
+        title: 'ПЕРЕВІРКА ФАКТІВ І ПРИПУЩЕНЬ',
+        role: 'Ви — аналітичний помічник для міської управлінської команди.',
+        task: 'Відокремте твердження, що прямо випливають із картки, від припущень. Визначте, що потребує додаткових даних або перевірки. Не переписуйте картку.',
+        output: `Подайте відповідь у трьох блоках:\n1. «Твердження з картки».\n2. «Припущення або нечіткі твердження».\n3. «Що потребує даних або перевірки».\nЯкщо даних недостатньо для висновку, поставте до трьох коротких уточнювальних запитань.`
       },
       questions: {
-        title: 'РЕЖИМ: УТОЧНЮВАЛЬНІ ПИТАННЯ',
-        task: 'Поставте від одного до трьох коротких уточнювальних запитань, які допоможуть автору самостійно покращити картку. Не давайте готової відповіді й не переписуйте текст.',
-        output: 'Відповідь подайте лише як нумерований список запитань. Не додавайте вступу, оцінки або нової версії картки.'
+        title: 'УТОЧНЮВАЛЬНІ ПИТАННЯ',
+        role: 'Ви — фасилітатор стратегічної розмови міської управлінської команди.',
+        task: 'Поставте короткі запитання, які допоможуть автору самостійно уточнити кліматичну візію та управлінську логіку картки. Не давайте готової відповіді й не переписуйте картку.',
+        output: 'Подайте лише нумерований список із трьох–п’яти запитань. Почніть із найбільш критичного питання. Не додавайте вступу, оцінки або нової версії картки.'
       },
       structure: {
-        title: 'РЕЖИМ: ПОВНОТА ТА СЛАБКІ МІСЦЯ',
-        task: 'Перевірте логічні зв’язки між викликом, бажаним станом, стійкістю, NBS, циркулярністю, трьома принципами та першим управлінським сигналом. Не переписуйте картку.',
-        output: `Відповідь подайте у трьох блоках:
-1. «Сильні логічні зв’язки».
-2. «Прогалини або суперечності».
-3. «Кроки для самостійного уточнення» — до трьох коротких дій.`
+        title: 'ПОВНОТА ТА СЛАБКІ МІСЦЯ',
+        role: 'Ви — рецензент управлінської логіки кліматичної картки громади.',
+        task: 'Перевірте зв’язок між викликом, бажаним станом, кліматично нейтральною візією, стійкістю, природоорієнтованими рішеннями, циркулярністю, трьома принципами та першим управлінським сигналом. Не переписуйте картку.',
+        output: `Подайте відповідь у трьох блоках:\n1. «Сильні логічні зв’язки».\n2. «Прогалини або суперечності».\n3. «Кроки для самостійного уточнення» — до трьох коротких дій.\nЯкщо даних недостатньо, назвіть відсутню інформацію й поставте уточнювальне запитання.`
       }
     };
     const contract = contracts[mode] || contracts.facts;
     return `${contract.title}
 
+РОЛЬ
+${contract.role}
+
+КОНТЕКСТ
+Учасник курсу формує первинну кліматично нейтральну візію громади на основі власного виклику, управлінських принципів і висновків із міських прикладів.
+
 ЗАВДАННЯ
 ${contract.task}
 
-ФОРМАТ ВІДПОВІДІ
-${contract.output}
-
-МЕЖІ БЕЗПЕКИ
-- Працюйте лише з інформацією нижче.
-- Не вигадуйте показників, проєктів, строків, бюджетів або характеристик громади.
-- Пишіть українською, доброзичливо, стримано й професійно.
-- Не використовуйте надмірної похвали та не ухвалюйте рішення замість міського голови або команди.
-
-КАРТКА УЧАСНИКА
+ДАНІ УЧАСНИКА
 Назва громади:
-${data.communityName || '[не заповнено]'}
+${valueOrMissing(data.communityName)}
 
 Головний кліматичний виклик:
-${data.climateChallenge || '[не заповнено]'}
-
-Кліматично нейтральна візія громади:
-${data.climateNeutralVision || '[не заповнено]'}
+${valueOrMissing(data.climateChallenge)}
 
 Попередній ескіз бажаного стану громади:
-${data.communityVision || '[не заповнено]'}
+${valueOrMissing(data.communityVision)}
 
 Кліматична стійкість у цій візії:
-${data.resilienceRole || '[не заповнено]'}
+${valueOrMissing(data.resilienceRole)}
 
 Роль природоорієнтованих рішень:
-${data.nbsRole || '[не заповнено]'}
+${valueOrMissing(data.nbsRole)}
 
 Ресурсна втрата, яку має зменшити циркулярна економіка:
-${data.resourceLoss || '[не заповнено]'}
+${valueOrMissing(data.resourceLoss)}
 
 Три принципи майбутніх рішень:
 ${principles}
 
 Перший управлінський сигнал:
-${data.managementSignal || '[не заповнено]'}
+${valueOrMissing(data.managementSignal)}
+
+Фінальна кліматично нейтральна візія громади:
+${valueOrMissing(data.climateNeutralVision)}
 
 ВИСНОВКИ З ОБРАНИХ КЕЙСІВ
-${selectedCaseContext}`;
+${selectedCaseContext}
+
+ОБМЕЖЕННЯ
+- Працюйте лише з наданою інформацією.
+- Не вигадуйте показників, проєктів, строків, бюджетів або характеристик громади.
+- Не підміняйте управлінське рішення автора.
+- Пишіть українською, коротко, доброзичливо й професійно.
+- Якщо інформації недостатньо, прямо зазначте це та поставте уточнювальне запитання.
+
+ФОРМАТ ВІДПОВІДІ
+${contract.output}`;
   }
 
   function renderCaseSummary() {
@@ -1231,21 +1325,25 @@ ${selectedCaseContext}`;
     renderCaseSummary();
     portfolioDate.textContent = new Date().toLocaleDateString('uk-UA');
     portfolioSummary.hidden = false;
-    pdfDownloadButton.disabled = false;
-    aiPromptText.textContent = currentAiPrompt();
+    pdfDownloadButton.disabled = !portfolioIsComplete();
   }
 
   portfolioFields.forEach((field) => field.addEventListener('input', () => {
+    field.setCustomValidity('');
+    field.removeAttribute('aria-invalid');
     savePortfolioSilently();
     updateCaseCommunityName();
-    aiPromptText.textContent = currentAiPrompt();
+    pdfDownloadButton.disabled = !portfolioIsComplete();
     if (!portfolioSummary.hidden) renderPortfolioSummary();
   }));
 
   portfolioForm.addEventListener('submit', (event) => {
     event.preventDefault();
+    if (!validatePortfolioRequired({ focus: true, announce: true })) return;
     savePortfolio();
     renderPortfolioSummary();
+    portfolioStatus.textContent = 'Картку збережено у цьому браузері.';
+    portfolioStatus.className = 'feedback is-correct';
     portfolioSummary.scrollIntoView({ behavior: scrollBehavior, block: 'start' });
   });
 
@@ -1258,6 +1356,8 @@ ${selectedCaseContext}`;
 
   async function downloadPortfolioPdf(event) {
     const button = event && event.currentTarget ? event.currentTarget : pdfDownloadButton;
+    if (!validatePortfolioRequired({ focus: true, announce: true })) return;
+    if (!validateOtherCaseSelection({ focus: true })) return;
     renderPortfolioSummary();
     const data = formDataObject();
     const community = window.UCANInterface.sanitizeFilename(data.communityName) || 'Громада';
@@ -1283,14 +1383,14 @@ ${selectedCaseContext}`;
       fields: [
         { key: 'communityName', label: labels.communityName },
         { key: 'climateChallenge', label: labels.climateChallenge },
-        { key: 'climateNeutralVision', label: 'Фінальна кліматично нейтральна візія громади' },
         { key: 'communityVision', label: labels.communityVision },
-        { key: 'caseInsights', label: 'Висновки з обраних кейсів' },
         { key: 'resilienceRole', label: labels.resilienceRole },
         { key: 'nbsRole', label: labels.nbsRole },
         { key: 'resourceLoss', label: labels.resourceLoss },
         { key: 'principles', label: labels.principles },
-        { key: 'managementSignal', label: labels.managementSignal }
+        { key: 'managementSignal', label: labels.managementSignal },
+        { key: 'climateNeutralVision', label: labels.climateNeutralVision },
+        ...(caseRecordsForOutput().length ? [{ key: 'caseInsights', label: 'Висновки з обраних кейсів' }] : [])
       ],
       data: pdfData,
       note: 'Чернетка створена учасником. Перевірте зміст разом із командою громади.'
@@ -1303,29 +1403,65 @@ ${selectedCaseContext}`;
     const firstField = portfolioForm.querySelector('input, textarea');
     if (firstField) firstField.focus({ preventScroll: true });
   });
-  const currentAiPrompt = () => buildAiPrompt(document.querySelector('input[name="l02-ai-mode"]:checked')?.value || 'facts');
-  document.querySelectorAll('[data-ai-platform]').forEach((link) => link.addEventListener('click', () => {
-    const platform = link.dataset.aiPlatform || 'AI-платформу';
-    aiPromptStatus.textContent = `${platform} відкривається в новій вкладці. Вставте скопійований запит у чат і самостійно перевірте результат.`;
-    aiPromptStatus.className = 'feedback';
-  }));
-  document.querySelectorAll('input[name="l02-ai-mode"]').forEach(input => input.addEventListener('change', () => { aiPromptText.textContent = currentAiPrompt(); aiPromptStatus.textContent = 'Режим змінено. Запит оновлено.'; input.focus(); }));
+  const aiCopyResetTimers = new WeakMap();
 
-  copyAiPromptButton.addEventListener('click', async () => {
-    const prompt = currentAiPrompt();
-    aiPromptText.textContent = prompt;
-    try {
-      await window.UCANInterface.copyText(prompt);
-      aiPromptStatus.textContent = 'Скопійовано';
-      const originalLabel = copyAiPromptButton.textContent;
-      copyAiPromptButton.textContent = 'Скопійовано';
-      window.setTimeout(() => { copyAiPromptButton.textContent = originalLabel; }, 1600);
-      aiPromptStatus.className = 'feedback is-correct';
-    } catch (error) {
-      aiPromptStatus.textContent = 'Не вдалося скопіювати автоматично. Виділіть запит вище та скопіюйте його вручну.';
-      aiPromptStatus.className = 'feedback is-incorrect';
-    }
+  document.querySelectorAll('[data-ai-action="copy"]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const scenario = button.dataset.aiScenario;
+      const status = document.querySelector(`[data-ai-status="${scenario}"]`);
+      if (!validatePortfolioRequired({ focus: true, announce: true })) {
+        if (status) {
+          status.textContent = 'Спочатку заповніть і збережіть усі поля практичної картки.';
+          status.className = 'ai-copy-status is-warning';
+        }
+        return;
+      }
+      if (!validateOtherCaseSelection({ focus: true })) {
+        if (status) {
+          status.textContent = 'Завершіть опис власного прикладу «Інше».';
+          status.className = 'ai-copy-status is-warning';
+        }
+        return;
+      }
+      const existingTimer = aiCopyResetTimers.get(button);
+      if (existingTimer) window.clearTimeout(existingTimer);
+      try {
+        const prompt = buildAiPrompt(scenario);
+        await window.UCANInterface.copyText(prompt);
+        button.textContent = 'Скопійовано';
+        button.classList.add('is-success');
+        if (status) {
+          status.textContent = 'Промпт скопійовано.';
+          status.className = 'ai-copy-status is-success';
+        }
+        const timer = window.setTimeout(() => {
+          button.textContent = 'Скопіювати промпт';
+          button.classList.remove('is-success');
+          if (status) {
+            status.textContent = '';
+            status.className = 'ai-copy-status';
+          }
+          aiCopyResetTimers.delete(button);
+        }, 1800);
+        aiCopyResetTimers.set(button, timer);
+      } catch (error) {
+        button.textContent = 'Скопіювати промпт';
+        button.classList.remove('is-success');
+        if (status) {
+          status.textContent = 'Не вдалося скопіювати. Дозвольте доступ до буфера обміну та спробуйте ще раз.';
+          status.className = 'ai-copy-status is-error';
+        }
+      }
+    });
   });
+
+  document.querySelectorAll('[data-ai-platform]').forEach((link) => link.addEventListener('click', () => {
+    const platform = link.dataset.aiPlatform || 'ШІ-сервіс';
+    if (aiServiceStatus) {
+      aiServiceStatus.textContent = `${platform} відкривається в новій вкладці. Вставте скопійований промпт у чат і перевірте відповідь самостійно.`;
+      aiServiceStatus.className = 'feedback';
+    }
+  }));
 
 
   const imageLightbox = document.getElementById('image-lightbox');
@@ -1351,21 +1487,28 @@ ${selectedCaseContext}`;
 
 
   clearPortfolioButton.addEventListener('click', () => {
-    const confirmed = window.confirm('Очистити всі поля Картки кліматично нейтральної візії громади?');
+    const confirmed = window.confirm('Очистити всі поля практичної картки? Нотатки до обраних кейсів залишаться збереженими.');
     if (!confirmed) return;
     portfolioForm.reset();
+    portfolioRequiredFields().forEach((field) => {
+      field.setCustomValidity('');
+      field.removeAttribute('aria-invalid');
+    });
     updateCaseCommunityName();
     safeStorage.remove(FORM_KEY);
+    safeStorage.remove(COMPLETED_KEY);
+    lessonCompleted = false;
+    document.body.classList.remove('is-completed');
     portfolioSummary.hidden = true;
     pdfDownloadButton.disabled = true;
-    aiPromptText.textContent = currentAiPrompt();
-    portfolioStatus.textContent = 'Форму очищено.';
+    portfolioStatus.textContent = 'Поля практичної картки очищено. Нотатки до кейсів збережено.';
     portfolioStatus.className = 'feedback';
+    portfolioForm.querySelector('input, textarea')?.focus();
   });
 
   restorePortfolio();
   updateCaseCommunityName();
-  aiPromptText.textContent = currentAiPrompt();
+  validatePortfolioRequired({ focus: false, announce: false });
   if (formHasContent()) renderPortfolioSummary();
 
   // Final test — Assessment Correction Addendum v1.0.
@@ -1405,7 +1548,7 @@ ${selectedCaseContext}`;
       testStatus.textContent = 'Усі відповіді правильні. Можна перейти до підсумку заняття.';
       testStatus.className = 'feedback is-correct';
       nextPageButton.disabled = false;
-      nextPageButton.textContent = 'Далі';
+      nextPageButton.textContent = 'Перейти до підсумку ➡️';
       updateTestGate();
     } else {
       testStatus.textContent = `Правильних відповідей: ${score} з 5. Перегляньте пояснення і спробуйте ще раз.`;
@@ -1437,8 +1580,15 @@ ${selectedCaseContext}`;
 
   updateTestGate();
   const restoredPage = pageFromHash() || normalizePage(safeStorage.get(PAGE_KEY) || 1);
-  const initialPage = restoredPage > 6 && !scenarioIsComplete() ? 6 : restoredPage;
+  let initialPage = restoredPage > 6 && !scenarioIsComplete() ? 6 : restoredPage;
+  if (initialPage > 5 && !validateOtherCaseSelection({ focus: false })) initialPage = 5;
+  if (initialPage > 8 && !portfolioIsComplete()) initialPage = 8;
   if (restoredPage > 6 && initialPage === 6 && globalStatus) globalStatus.textContent = 'Завершіть інтерактивні ситуації, щоб продовжити заняття.';
+  if (restoredPage > 8 && initialPage === 8 && globalStatus) globalStatus.textContent = 'Заповніть обов’язкові поля практичної картки, щоб продовжити заняття.';
+  if (lessonCompleted && (!scenarioIsComplete() || !portfolioIsComplete() || !testPassed)) {
+    lessonCompleted = false;
+    safeStorage.remove(COMPLETED_KEY);
+  }
   if (lessonCompleted) document.body.classList.add('is-completed');
   showPage(initialPage, { replace: true, focus: false, allowLocked: testPassed, bypassScenarioCheckpoint: true });
 })();

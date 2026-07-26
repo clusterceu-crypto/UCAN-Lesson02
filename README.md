@@ -1,30 +1,38 @@
-# UCAN Lesson 02 — Gold Release v2.3
+# UCAN Lesson 02 — Gold Release v2.5
 
-## Run
+**Тема:** ключові концепції кліматично нейтрального міста: кліматична стійкість, природоорієнтовані рішення, циркулярна економіка та кліматично нейтральна візія громади.
 
-Extract the archive and serve the folder through an HTTP/HTTPS server. Open `index.html`. The lesson has no server-side dependency and stores learner data locally in the browser.
+## Запуск
 
-## Runtime files
+Відкрийте `index.html` у сучасному браузері або опублікуйте вміст кореня архіву на GitHub Pages / статичному вебсервері. Зовнішні бібліотеки, серверні запити, автентифікація та бекенд не потрібні.
 
-- `index.html`
-- `css/style.css`
-- `js/script.js`
-- `assets/images/` — three approved visual assets
+## Основні функції
 
-## UX harmonization v2.3
+- 10 послідовних сторінок із прогресом і контрольованими переходами;
+- інтерактивне зіставлення концепцій;
+- множинний вибір міських кейсів і власний приклад «Інше»;
+- локальне збереження практичної картки та нотаток у `localStorage`;
+- підсумок Портфеля мера;
+- три незалежні сценарії ШІ-підтримки з копіюванням промптів;
+- локальне формування PDF через `canvas → JPEG → Blob → download`;
+- підсумковий тест і стан завершення заняття.
 
-- the Portfolio action is labelled `📄 Завантажити мою картку PDF`;
-- PDF is created locally through the canonical Lesson 01 canvas → JPEG → PDF Blob → browser download workflow;
-- the browser print dialog is not used;
-- the downloaded filename follows `Картка_кліматичного_виклику_<Назва_громади>_<YYYY-MM-DD>.pdf`;
-- AI prompt copy happens immediately and provides concise learner feedback;
-- the AI prompt preview dialog and its obsolete handlers were removed;
-- all Lesson 02 Portfolio, CASE_OTHER, AI-mode, navigation, progress, quiz and localStorage behavior remains compatible with v2.2.
+## Дані та приватність
 
-## Privacy
+Відповіді зберігаються лише у браузері користувача. Вони не передаються автоматично до ChatGPT, Gemini або інших зовнішніх сервісів. Користувач сам копіює промпт і вставляє його у вибраний сервіс.
 
-Portfolio, case notes and progress remain in browser localStorage. External AI platforms receive nothing automatically. PDF creation is local and makes no server request.
+## Ключі локального збереження
 
-## Verification boundary
+- `ucan_l02_progress_v1`
+- `ucan_l02_portfolio_v1`
+- `ucan_l02_test_v2`
+- `ucan_l02_scenarios_v2`
+- `ucan_l02_max_page_v2`
+- `ucan_l02_completed_v2`
+- `ucan_l02_case_notes_v2`
 
-The v2.3 UX hotfix passed JavaScript syntax, package integrity and controlled Chromium regression checks. It is not a new full QA cycle.
+Legacy-ключ `ucan_l02_case_notes_v1` використовується лише для безпечної міграції старих нотаток.
+
+## Релізна документація
+
+Актуальні документи розміщені в каталозі `docs/`. Контрольні суми всіх файлів пакета містяться у `docs/PACKAGE_MANIFEST_v2.5.sha256`.
