@@ -1,53 +1,34 @@
-# UCAN Lesson 02 — Gold Release Notes v2.0
+# UCAN Lesson 02 — Gold Release Notes v2.2
 
-**Release type:** Final Gold Release Candidate  
-**Production role:** Production Reference v2 for Lessons 03–26  
-**Release date:** 2026-07-26  
-**Base:** Candidate B  
-**Architecture / UX merge donor:** Candidate A
+**Build:** `UCAN_Lesson_02_Gold_Release_v2.2`  
+**Release role:** Gold Release completion build  
+**Date:** 2026-07-26
 
-## Release decision
+## Completion result
 
-The Gold Release Candidate is approved for final deployment-origin validation. Candidate B remains the content and UX baseline. Candidate A contributed only controlled architecture, accessibility, persistence, dialog, progress and release-structure patterns.
+The build closes the confirmed local Lesson 02 completion gaps without changing the lesson page architecture, approved cases, URLs, test, gates or visual assets.
 
-No verified Candidate B improvement was removed. The release preserves:
+The learner can now compare several existing city examples, keep separate notes, transfer several conclusions without silent overwriting and retain the complete case trail in the final Portfolio outputs.
 
-- all confirmed city examples: Lviv, Rotterdam, Amsterdam and Leuven;
-- all official URLs included in Candidate B;
-- Ukrainian context and editorial refinements;
-- the case micro-task and case-to-Portfolio transfer;
-- Portfolio Summary and three separate principle fields;
-- the improved five-question assessment and feedback;
-- all three AI-support modes;
-- approved PNG assets without byte changes.
+## Learner-facing completion
 
-## Gold improvements
+- the case task displays the learner’s community name when available;
+- one or several cases may be selected;
+- each case has an independent three-part note record;
+- the preparatory desired-state sketch and final climate-neutral vision have distinct roles;
+- Portfolio Summary, Print/Save-as-PDF and AI use the same selected-case provenance;
+- AI instructions explicitly explain the manual preview/copy/open/paste/verify workflow;
+- no Portfolio or prompt data are sent automatically.
 
-### Architecture Improvements
+## Technical completion
 
-- one clear executable release root;
-- one CSS file and one JavaScript file;
-- no nested ZIP archives, duplicate builds, legacy artifacts or unused Lesson 03 JavaScript;
-- explicit persisted completion state and furthest-progress state;
-- preserved browser Back/Forward support.
+- storage key: `ucan_l02_case_notes_v2`;
+- legacy migration source retained: `ucan_l02_case_notes_v1`;
+- Portfolio storage remains `ucan_l02_portfolio_v1`;
+- PDF continues to use local semantic HTML and the browser print engine;
+- PDF output is intended to be searchable/selectable; PDF-UA is not claimed;
+- adjacent lesson URLs remain canonical production URLs.
 
-### UX Improvements
+## Verification statement
 
-- strict completion gate for all three interactive situations;
-- protected case-to-Portfolio transfer with merge, explicit replace or cancel;
-- accessible prompt preview dialog while retaining inline preview;
-- standard image enlargement for Hero and both infographics;
-- corrected mobile heading wrapping, compact page labels and dialog layout;
-- canonical PDF and AI button labels.
-
-### Functional Improvements
-
-- progressbar ARIA value now uses percentage rather than page index;
-- independent, non-contradictory prompts for facts, questions and structure modes;
-- local Portfolio PDF generation verified;
-- reset clears progress, test and scenarios while preserving Portfolio and case notes;
-- dialog ESC, backdrop close and focus return verified.
-
-## QA outcome
-
-All static and controlled Chromium regression scenarios passed. No known application defect remains open. The unchanged ZIP still requires the normal final smoke test on the intended HTTP/HTTPS publication origin because managed Chromium in the production environment restricts direct localhost navigation.
+This package passed targeted completion sanity checks in Chromium, static HTML checks, JavaScript syntax validation, manifest validation and archive integrity checks. This document does not replace an independent final deployment/browser release decision.

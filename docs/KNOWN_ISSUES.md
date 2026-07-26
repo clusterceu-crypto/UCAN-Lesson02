@@ -1,13 +1,13 @@
-# UCAN Lesson 02 — Known Issues v2.0
+# UCAN Lesson 02 — Known Issues and Accepted Limitations v2.2
 
-## Application defects
+## Known application defects
 
-**None known.**
+No known local application defect remains within the completed Lesson 02 scope after targeted production sanity checks.
 
-All identified comparison-review regressions were corrected and passed targeted regression checks.
+## Accepted limitation
 
-## Non-defect deployment requirement
+- **PDF-UA:** not implemented or claimed. The browser Print/Save-as-PDF workflow produces semantic source text, but PDF tagging depends on the browser print engine and user settings.
 
-A final smoke test must be run on the intended HTTP/HTTPS publication origin. The managed QA environment served the package through a local HTTP server but restricted Chromium direct localhost navigation; therefore browser execution was validated using an exact inlined runtime copy.
+## Release verification boundary
 
-This requirement does not require redesign or code changes unless the deployment-origin test reveals a new critical defect.
+- Independent deployment verification in the required production browser matrix remains separate from this production sprint. No Edge or Firefox pass is claimed by this document.

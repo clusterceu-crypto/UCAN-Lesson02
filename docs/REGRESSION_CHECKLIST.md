@@ -1,46 +1,30 @@
-# UCAN Lesson 02 — Regression Checklist v2.0
+# UCAN Lesson 02 — Completion Regression Checklist v2.2
 
-**Overall:** PASS (40/40)
+**Build:** `UCAN_Lesson_02_Gold_Release_v2.2`  
+**Scope:** targeted completion sanity.
 
-| ID | Area | Scenario | Status | Evidence | Blocking |
-|---|---|---|---|---|---|
-| REG-001 | Release Structure | Single executable root | PASS | Static package inventory | No |
-| REG-002 | Release Structure | Nested/legacy cleanup | PASS | Static archive scan | No |
-| REG-003 | Content | Candidate B content preservation | PASS | Normalized main-content comparison | No |
-| REG-004 | Content | Verified cases | PASS | DOM text inventory | No |
-| REG-005 | Content | Official URLs | PASS | Href inventory | No |
-| REG-006 | Assets | Approved PNG integrity | PASS | SHA-256 comparison | No |
-| REG-007 | HTML | Page sequence | PASS | DOM/static check | No |
-| REG-008 | HTML | Heading hierarchy | PASS | DOM/static check | No |
-| REG-009 | HTML | Duplicate IDs | PASS | DOM/static check | No |
-| REG-010 | Navigation | Sequential controls | PASS | Controlled Chromium | No |
-| REG-011 | Navigation | Browser Back/Forward | PASS | Controlled Chromium | No |
-| REG-012 | Navigation | Semantic adjacent lessons | PASS | DOM text scan | No |
-| REG-013 | Progress | Percentage semantics | PASS | Controlled Chromium | No |
-| REG-014 | Progress | Completion state | PASS | Controlled Chromium/localStorage | No |
-| REG-015 | Progress | Furthest progress | PASS | Controlled Chromium | No |
-| REG-016 | Reset | Controlled reset | PASS | Controlled Chromium | No |
-| REG-017 | Interactive | Completion gate | PASS | Controlled Chromium | No |
-| REG-018 | Interactive | Persistence | PASS | Controlled Chromium/localStorage | No |
-| REG-019 | Assessment | Test gate | PASS | Controlled Chromium | No |
-| REG-020 | Assessment | Feedback | PASS | Controlled Chromium | No |
-| REG-021 | Portfolio | Autosave and restore | PASS | Controlled Chromium/localStorage | No |
-| REG-022 | Portfolio | Summary | PASS | Controlled Chromium | No |
-| REG-023 | Portfolio | Transfer protection | PASS | Controlled Chromium | No |
-| REG-024 | Portfolio | PDF | PASS | Controlled Chromium/download evidence | No |
-| REG-025 | AI Assistant | Facts mode | PASS | Prompt text check | No |
-| REG-026 | AI Assistant | Questions mode | PASS | Prompt text check | No |
-| REG-027 | AI Assistant | Structure mode | PASS | Prompt text check | No |
-| REG-028 | AI Assistant | Preview dialog | PASS | Controlled Chromium | No |
-| REG-029 | AI Assistant | Copy UX | PASS | Controlled Chromium | No |
-| REG-030 | AI Assistant | Platform links | PASS | DOM link inventory | No |
-| REG-031 | Images | Zoom coverage | PASS | Controlled Chromium | No |
-| REG-032 | Images | Lightbox controls | PASS | Controlled Chromium | No |
-| REG-033 | Accessibility | Accessible names | PASS | Live DOM audit | No |
-| REG-034 | Accessibility | Dialog labels | PASS | Live DOM audit | No |
-| REG-035 | Accessibility | Focus visibility | PASS | Controlled Chromium/visual review | No |
-| REG-036 | Mobile | Viewport width | PASS | Controlled Chromium metrics | No |
-| REG-037 | Mobile | Heading wrapping | PASS | Controlled Chromium metrics/visual review | No |
-| REG-038 | Mobile | Page labels | PASS | Controlled Chromium metrics | No |
-| REG-039 | Runtime | JavaScript syntax | PASS | node --check | No |
-| REG-040 | Runtime | Console errors | PASS | Controlled Chromium console | No |
+| ID | Area | Check | Result |
+|---|---|---|---|
+| CREG-001 | Structure | One executable root; no nested ZIP | PASS |
+| CREG-002 | HTML | Pages 1–10 and `#page-*` preserved | PASS |
+| CREG-003 | Assets | A01–A03 byte hashes unchanged | PASS |
+| CREG-004 | Cases | Multiple existing cases can be selected | PASS |
+| CREG-005 | Cases | Separate notes save and restore per case | PASS |
+| CREG-005A | Cases | Editing one note does not detach later fields from the stored case record | PASS |
+| CREG-006 | Migration | Non-empty v1 notes migrate once and source remains | PASS |
+| CREG-007 | Transfer | Empty principle fields fill in selected order | PASS |
+| CREG-008 | Transfer | Occupied fields require merge/replace/skip | PASS |
+| CREG-009 | Transfer | Local checks append with case labels | PASS |
+| CREG-010 | Protection | `climateChallenge` is never replaced by case data | PASS |
+| CREG-011 | Portfolio | Existing v1 Portfolio data restore | PASS |
+| CREG-012 | Portfolio | Vision-field roles are distinct | PASS |
+| CREG-013 | Summary | Selected-case provenance is visible | PASS |
+| CREG-014 | AI | Three existing modes preserved | PASS |
+| CREG-015 | AI | All non-empty selected case records appear | PASS |
+| CREG-016 | AI | Six-step learner workflow is visible | PASS |
+| CREG-017 | PDF | Label matches Print/Save-as-PDF behavior | PASS |
+| CREG-018 | PDF | Selected-case provenance is included as text | PASS |
+| CREG-019 | Navigation | Internal navigation and gates preserved | PASS |
+| CREG-020 | Runtime | JavaScript syntax and Chromium console sanity | PASS |
+
+This checklist does not claim independent Edge/Firefox deployment verification or PDF-UA conformance.

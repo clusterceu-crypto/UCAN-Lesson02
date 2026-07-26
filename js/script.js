@@ -31,148 +31,119 @@
   }
   Interface.sanitizeFilename = sanitizeFilename;
 
-  function wrapCanvasText(context, text, maxWidth) {
-    const value = String(text || '—').replace(/\r\n?/g, '\n');
-    const paragraphs = value.split('\n');
-    const lines = [];
-    paragraphs.forEach((paragraph, paragraphIndex) => {
-      const words = paragraph.split(/\s+/).filter(Boolean);
-      if (!words.length) lines.push('');
-      else {
-        let line = '';
-        words.forEach(word => {
-          const candidate = line ? `${line} ${word}` : word;
-          if (context.measureText(candidate).width <= maxWidth) { line = candidate; return; }
-          if (line) lines.push(line);
-          if (context.measureText(word).width <= maxWidth) { line = word; return; }
-          let fragment = '';
-          Array.from(word).forEach(character => {
-            const next = fragment + character;
-            if (context.measureText(next).width > maxWidth && fragment) {
-              lines.push(fragment);
-              fragment = character;
-            } else fragment = next;
-          });
-          line = fragment;
-        });
-        if (line) lines.push(line);
-      }
-      if (paragraphIndex < paragraphs.length - 1) lines.push('');
-    });
-    return lines;
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
-  function createPdfCanvases({ title, label = 'Портфель мера', fields, data, note }) {
-    const width = 1240;
-    const height = 1754;
-    const margin = 92;
-    const maxWidth = width - margin * 2;
-    const bottom = height - margin;
-    const canvases = [];
-    let canvas;
-    let context;
-    let y;
-
-    function newPage() {
-      canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      context = canvas.getContext('2d', { alpha: false });
-      context.fillStyle = '#ffffff';
-      context.fillRect(0, 0, width, height);
-      canvases.push(canvas);
-      y = margin;
-    }
-    function ensureSpace(required) { if (y + required > bottom) newPage(); }
-    function drawText(text, options = {}) {
-      const fontSize = options.fontSize || 28;
-      const lineHeight = options.lineHeight || Math.round(fontSize * 1.42);
-      const weight = options.weight || 400;
-      const color = options.color || '#1f2a33';
-      const gapAfter = options.gapAfter ?? 18;
-      context.font = `${weight} ${fontSize}px Arial, "DejaVu Sans", sans-serif`;
-      context.fillStyle = color;
-      const lines = wrapCanvasText(context, text, options.maxWidth || maxWidth);
-      for (const line of lines) {
-        ensureSpace(lineHeight + gapAfter);
-        if (line) context.fillText(line, margin, y);
-        y += lineHeight;
-      }
-      y += gapAfter;
-    }
-
-    newPage();
-    drawText(title, { fontSize: 42, lineHeight: 54, weight: 700, color: '#123f68', gapAfter: 10 });
-    drawText(label, { fontSize: 30, lineHeight: 40, weight: 700, color: '#2d7b55', gapAfter: 34 });
-    drawText('Локально створений навчальний артефакт. Дані не передавалися на сервер.', { fontSize: 22, lineHeight: 32, color: '#47545e', gapAfter: 32 });
-    fields.forEach(field => {
-      ensureSpace(110);
-      context.strokeStyle = '#cfd9df';
-      context.lineWidth = 2;
-      context.beginPath();
-      context.moveTo(margin, y);
-      context.lineTo(width - margin, y);
-      context.stroke();
-      y += 24;
-      drawText(field.label, { fontSize: 24, lineHeight: 34, weight: 700, color: '#123f68', gapAfter: 8 });
-      drawText((data[field.key] || '').trim() || '—', { fontSize: 24, lineHeight: 36, gapAfter: 28 });
-    });
-    if (note) {
-      ensureSpace(130);
-      context.strokeStyle = '#cfd9df';
-      context.beginPath();
-      context.moveTo(margin, y);
-      context.lineTo(width - margin, y);
-      context.stroke();
-      y += 24;
-      drawText('Примітка', { fontSize: 24, lineHeight: 34, weight: 700, color: '#123f68', gapAfter: 8 });
-      drawText(note, { fontSize: 22, lineHeight: 33, color: '#47545e', gapAfter: 0 });
-    }
-    return canvases;
+  function printableValue(value) {
+    const normalized = String(value ?? '').replace(/\r\n?/g, '\n').trim();
+    return normalized || '—';
   }
 
-  function base64ToBytes(base64) {
-    const binary = window.atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-    return bytes;
+  function createPortfolioPrintHtml({ title, label = 'Портфель мера', filename, fields, data, note }) {
+    const documentTitle = String(filename || title || 'UCAN Portfolio')
+      .replace(/\.pdf$/i, '')
+      .trim() || 'UCAN Portfolio';
+    const fieldSections = fields.map(field => `
+      <section class="portfolio-section" aria-labelledby="pdf-field-${escapeHtml(field.key)}">
+        <h2 id="pdf-field-${escapeHtml(field.key)}">${escapeHtml(field.label)}</h2>
+        <div class="portfolio-value">${escapeHtml(printableValue(data[field.key]))}</div>
+      </section>`).join('');
+    const noteSection = note ? `
+      <footer class="portfolio-note">
+        <strong>Примітка:</strong> ${escapeHtml(note)}
+      </footer>` : '';
+
+    return `<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(documentTitle)}</title>
+  <style>
+    @page { size: A4; margin: 15mm 16mm 16mm; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { color: #1f2a33; background: #ffffff; font-family: Arial, "DejaVu Sans", sans-serif; }
+    body { margin: 0; font-size: 10.5pt; line-height: 1.42; }
+    header { margin: 0 0 5.5mm; }
+    h1 { margin: 0 0 2mm; color: #123f68; font-size: 22pt; line-height: 1.16; }
+    .portfolio-label { margin: 0 0 4mm; color: #2d7b55; font-size: 14pt; font-weight: 700; }
+    .privacy-note { margin: 0; padding: 3.5mm 4mm; border-left: 1.2mm solid #2d7b55; background: #eef7f2; color: #34454f; }
+    main { display: block; }
+    .portfolio-section { margin: 0; padding: 3mm 0 2.8mm; border-top: 0.35mm solid #cfd9df; break-inside: auto; page-break-inside: auto; }
+    .portfolio-section h2 { margin: 0 0 1.3mm; color: #123f68; font-size: 12.2pt; line-height: 1.25; break-after: avoid; page-break-after: avoid; }
+    .portfolio-value { white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; orphans: 3; widows: 3; }
+    .portfolio-note { margin: 2mm 0 0; color: #47545e; font-size: 9.2pt; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; }
+    @media screen {
+      body { max-width: 210mm; margin: 0 auto; padding: 17mm; box-shadow: 0 0 18px rgba(0,0,0,.12); }
+    }
+    @media print {
+      html, body { background: #ffffff; }
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>${escapeHtml(title)}</h1>
+    <p class="portfolio-label">${escapeHtml(label)}</p>
+    <p class="privacy-note">Локально створений навчальний артефакт. Дані не передавалися на сервер.</p>
+    ${noteSection}
+  </header>
+  <main>${fieldSections}</main>
+</body>
+</html>`;
   }
 
-  function buildImagePdf(canvases) {
-    const encoder = new TextEncoder();
-    const chunks = [];
-    const offsets = [0];
-    let length = 0;
-    const pushBytes = bytes => { chunks.push(bytes); length += bytes.length; };
-    const pushText = text => pushBytes(encoder.encode(text));
-    const images = canvases.map(canvas => {
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-      return { width: canvas.width, height: canvas.height, bytes: base64ToBytes(dataUrl.split(',')[1]) };
+  Interface.createPortfolioPrintHtml = createPortfolioPrintHtml;
+
+  async function printPortfolioHtml(html) {
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('title', 'Підготовка локального PDF');
+    iframe.setAttribute('aria-hidden', 'true');
+    Object.assign(iframe.style, {
+      position: 'fixed',
+      right: '0',
+      bottom: '0',
+      width: '1px',
+      height: '1px',
+      border: '0',
+      opacity: '0',
+      pointerEvents: 'none'
     });
-    const objectCount = 2 + images.length * 3;
-    const pageIds = images.map((_, index) => 3 + index * 3);
-    pushText('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
-    function startObject(id) { offsets[id] = length; pushText(`${id} 0 obj\n`); }
-    function endObject() { pushText('endobj\n'); }
-    startObject(1); pushText('<< /Type /Catalog /Pages 2 0 R >>\n'); endObject();
-    startObject(2); pushText(`<< /Type /Pages /Count ${pageIds.length} /Kids [${pageIds.map(id => `${id} 0 R`).join(' ')}] >>\n`); endObject();
-    images.forEach((record, index) => {
-      const pageId = 3 + index * 3;
-      const contentId = pageId + 1;
-      const imageId = pageId + 2;
-      const imageName = `Im${index}`;
-      const content = `q\n595 0 0 842 0 0 cm\n/${imageName} Do\nQ\n`;
-      const contentBytes = encoder.encode(content);
-      startObject(pageId); pushText(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /${imageName} ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>\n`); endObject();
-      startObject(contentId); pushText(`<< /Length ${contentBytes.length} >>\nstream\n`); pushBytes(contentBytes); pushText('endstream\n'); endObject();
-      startObject(imageId); pushText(`<< /Type /XObject /Subtype /Image /Width ${record.width} /Height ${record.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${record.bytes.length} >>\nstream\n`); pushBytes(record.bytes); pushText('\nendstream\n'); endObject();
-    });
-    const xrefOffset = length;
-    pushText(`xref\n0 ${objectCount + 1}\n`);
-    pushText('0000000000 65535 f \n');
-    for (let id = 1; id <= objectCount; id += 1) pushText(`${String(offsets[id]).padStart(10, '0')} 00000 n \n`);
-    pushText(`trailer\n<< /Size ${objectCount + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
-    return new Blob(chunks, { type: 'application/pdf' });
+    document.body.appendChild(iframe);
+
+    const printWindow = iframe.contentWindow;
+    const printDocument = iframe.contentDocument || (printWindow && printWindow.document);
+    if (!printWindow || !printDocument) {
+      iframe.remove();
+      throw new Error('Print document could not be created');
+    }
+
+    printDocument.open();
+    printDocument.write(html);
+    printDocument.close();
+
+    if (printDocument.fonts && printDocument.fonts.ready) {
+      try { await printDocument.fonts.ready; } catch (error) { /* Browser fallback font is acceptable. */ }
+    }
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    let removed = false;
+    const cleanup = () => {
+      if (removed) return;
+      removed = true;
+      iframe.remove();
+    };
+    printWindow.addEventListener('afterprint', cleanup, { once: true });
+    window.setTimeout(cleanup, 60000);
+    printWindow.focus();
+    printWindow.print();
   }
 
   Interface.downloadPortfolioPdf = async function downloadPortfolioPdf({ button, status, title, label, filename, fields, data, note }) {
@@ -180,24 +151,15 @@
     const original = button.textContent;
     button.disabled = true;
     button.setAttribute('aria-busy', 'true');
-    button.textContent = 'Створення PDF…';
-    if (status) status.textContent = 'Створюємо PDF локально у Вашому браузері…';
+    button.textContent = 'Підготовка PDF…';
+    if (status) status.textContent = 'Готуємо текстовий PDF локально у Вашому браузері…';
     try {
-      await new Promise(resolve => requestAnimationFrame(resolve));
-      const canvases = createPdfCanvases({ title, label, fields, data, note });
-      const blob = buildImagePdf(canvases);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
-      if (status) status.textContent = 'PDF створено та завантажено. Дані залишилися у Вашому браузері.';
+      const html = createPortfolioPrintHtml({ title, label, filename, fields, data, note });
+      await printPortfolioHtml(html);
+      if (status) status.textContent = 'Відкрито системний діалог друку. Оберіть «Зберегти як PDF». Дані залишаються у Вашому браузері.';
     } catch (error) {
       console.error('Portfolio PDF generation failed', error);
-      if (status) status.textContent = 'Не вдалося створити PDF. Перевірте налаштування браузера та спробуйте ще раз.';
+      if (status) status.textContent = 'Не вдалося підготувати PDF. Перевірте налаштування друку браузера та спробуйте ще раз.';
       throw error;
     } finally {
       button.disabled = false;
@@ -209,7 +171,7 @@
   window.UCANInterface = Object.freeze(Interface);
 })();
 
-/* Lesson 02 Gold Release runtime — Candidate B with controlled Candidate A architecture merge. */
+/* UCAN Lesson 02 Gold Release v2.2 — completed local production runtime. */
 (() => {
   'use strict';
 
@@ -220,7 +182,8 @@
   const SCENARIO_KEY = 'ucan_l02_scenarios_v2';
   const MAX_PAGE_KEY = 'ucan_l02_max_page_v2';
   const COMPLETED_KEY = 'ucan_l02_completed_v2';
-  const CASE_KEY = 'ucan_l02_case_notes_v1';
+  const CASE_KEY_V1 = 'ucan_l02_case_notes_v1';
+  const CASE_KEY = 'ucan_l02_case_notes_v2';
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
 
@@ -233,6 +196,13 @@
     },
     remove(key) {
       try { window.localStorage.removeItem(key); return true; } catch (error) { return false; }
+    },
+    keys() {
+      try {
+        return Array.from({ length: window.localStorage.length }, (_, index) => window.localStorage.key(index)).filter(Boolean);
+      } catch (error) {
+        return [];
+      }
     }
   };
 
@@ -413,97 +383,350 @@
     });
   }
 
-  // Practice-oriented case notes.
-  const caseFields = ['case-example', 'case-problem', 'case-principle', 'case-local-decision']
-    .map((id) => document.getElementById(id))
-    .filter(Boolean);
+  // Practice-oriented multi-case notes.
+  const CASE_VERSION = 2;
+  const CASE_CATALOG = Object.freeze([
+    { id: 'lviv', title: 'Львів — системна візія громади' },
+    { id: 'rotterdam', title: 'Роттердам — багатофункціональна водна площа' },
+    { id: 'amsterdam', title: 'Амстердам — циркулярність у міських рішеннях' },
+    { id: 'leuven', title: 'Левен — від візії до дорожньої карти' }
+  ]);
+  const CASE_BY_ID = new Map(CASE_CATALOG.map((item) => [item.id, item]));
+  const CASE_ID_BY_TITLE = new Map(CASE_CATALOG.map((item) => [item.title, item.id]));
+  const caseSelectionInputs = [...document.querySelectorAll('[data-case-select]')];
+  const selectedCaseNotes = document.getElementById('selected-case-notes');
+  const caseSelectionStatus = document.getElementById('case-selection-status');
+  const caseCommunityName = document.getElementById('case-community-name');
   const caseTransferButton = document.getElementById('case-transfer');
   const caseTransferStatus = document.getElementById('case-transfer-status');
+  let caseState = { version: CASE_VERSION, records: [] };
 
-  function caseDataObject() {
-    return Object.fromEntries(caseFields.map((field) => [field.id, field.value]));
+  function cleanCaseRecord(record) {
+    const catalogItem = CASE_BY_ID.get(String(record?.id || ''));
+    if (!catalogItem) return null;
+    return {
+      id: catalogItem.id,
+      title: catalogItem.title,
+      problem: typeof record.problem === 'string' ? record.problem : '',
+      principle: typeof record.principle === 'string' ? record.principle : '',
+      localCheck: typeof record.localCheck === 'string' ? record.localCheck : ''
+    };
   }
 
-  function restoreCaseNotes() {
-    const raw = safeStorage.get(CASE_KEY);
-    if (!raw) return;
+  function saveCaseState() {
+    const payload = {
+      version: CASE_VERSION,
+      records: caseState.records.map(cleanCaseRecord).filter(Boolean),
+      updatedAt: new Date().toISOString()
+    };
+    caseState.version = CASE_VERSION;
+    caseState.updatedAt = payload.updatedAt;
+    return safeStorage.set(CASE_KEY, JSON.stringify(payload));
+  }
+
+  function migrateLegacyCaseNotes() {
+    const raw = safeStorage.get(CASE_KEY_V1);
+    if (!raw) return [];
     try {
-      const data = JSON.parse(raw);
-      caseFields.forEach((field) => {
-        if (typeof data[field.id] === 'string') field.value = data[field.id];
-      });
+      const legacy = JSON.parse(raw);
+      const title = typeof legacy['case-example'] === 'string' ? legacy['case-example'].trim() : '';
+      const id = CASE_ID_BY_TITLE.get(title);
+      const problem = typeof legacy['case-problem'] === 'string' ? legacy['case-problem'] : '';
+      const principle = typeof legacy['case-principle'] === 'string' ? legacy['case-principle'] : '';
+      const localCheck = typeof legacy['case-local-decision'] === 'string' ? legacy['case-local-decision'] : '';
+      if (!id || ![title, problem, principle, localCheck].some((value) => String(value).trim())) return [];
+      const migrated = [{ id, title: CASE_BY_ID.get(id).title, problem, principle, localCheck }];
+      const saved = safeStorage.set(CASE_KEY, JSON.stringify({ version: CASE_VERSION, records: migrated, migratedFrom: CASE_KEY_V1, updatedAt: new Date().toISOString() }));
+      if (saved && caseSelectionStatus) {
+        caseSelectionStatus.textContent = 'Попередню нотатку з кейсу перенесено до нового формату без видалення вихідних даних.';
+        caseSelectionStatus.className = 'feedback is-correct';
+      }
+      return saved ? migrated : [];
     } catch (error) {
-      safeStorage.remove(CASE_KEY);
+      return [];
     }
   }
 
-  caseFields.forEach((field) => field.addEventListener('input', () => safeStorage.set(CASE_KEY, JSON.stringify(caseDataObject()))));
-  caseFields.forEach((field) => field.addEventListener('change', () => safeStorage.set(CASE_KEY, JSON.stringify(caseDataObject()))));
+  function restoreCaseState() {
+    const raw = safeStorage.get(CASE_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        const records = Array.isArray(parsed?.records) ? parsed.records.map(cleanCaseRecord).filter(Boolean) : [];
+        const unique = [];
+        const seen = new Set();
+        records.forEach((record) => {
+          if (!seen.has(record.id)) { seen.add(record.id); unique.push(record); }
+        });
+        caseState = { version: CASE_VERSION, records: unique };
+        return;
+      } catch (error) {
+        // Keep the invalid source untouched and fall back to recoverable legacy data.
+      }
+    }
+    caseState = { version: CASE_VERSION, records: migrateLegacyCaseNotes() };
+  }
+
+  function caseRecords() {
+    return caseState.records.map((record) => ({ ...record }));
+  }
+
+  function caseRecordsForOutput() {
+    return caseRecords().filter((record) => [record.problem, record.principle, record.localCheck].some((value) => value.trim()));
+  }
+
+  function caseRecordText(records = caseRecordsForOutput()) {
+    if (!records.length) return '[кейси не обрано або нотатки не заповнено]';
+    const communityName = document.getElementById('community-name')?.value.trim();
+    const community = communityName ? `громаді «${communityName}»` : 'своїй громаді';
+    return records.map((record, index) => `${index + 1}. ${record.title}
+- Що вирішувало місто: ${record.problem.trim() || '[не заповнено]'}
+- Корисний принцип: ${record.principle.trim() || '[не заповнено]'}
+- Що варто перевірити у ${community}: ${record.localCheck.trim() || '[не заповнено]'}`).join('\n\n');
+  }
+
+  function updateCaseCommunityName() {
+    if (!caseCommunityName) return;
+    const value = document.getElementById('community-name')?.value.trim();
+    caseCommunityName.textContent = value || 'Вашої громади';
+  }
+
+  function refreshCaseDependentOutputs() {
+    const promptTarget = document.getElementById('ai-prompt-text');
+    if (promptTarget) promptTarget.textContent = buildAiPrompt(document.querySelector('input[name="l02-ai-mode"]:checked')?.value || 'facts');
+    const summary = document.getElementById('portfolio-summary');
+    if (summary && !summary.hidden) renderPortfolioSummary();
+  }
+
+  function removeCaseRecord(id, checkbox) {
+    const record = caseState.records.find((item) => item.id === id);
+    const hasNotes = record && [record.problem, record.principle, record.localCheck].some((value) => value.trim());
+    if (hasNotes && !window.confirm(`Видалити збережені нотатки для кейсу «${record.title}»?`)) {
+      checkbox.checked = true;
+      return;
+    }
+    caseState.records = caseState.records.filter((item) => item.id !== id);
+    saveCaseState();
+    renderSelectedCaseNotes();
+    refreshCaseDependentOutputs();
+  }
+
+  function renderSelectedCaseNotes() {
+    caseSelectionInputs.forEach((input) => { input.checked = caseState.records.some((record) => record.id === input.value); });
+    if (!selectedCaseNotes) return;
+    selectedCaseNotes.innerHTML = '';
+    if (!caseState.records.length) {
+      const empty = document.createElement('p');
+      empty.className = 'field-hint';
+      empty.textContent = 'Оберіть щонайменше один приклад, щоб додати окремі нотатки.';
+      selectedCaseNotes.appendChild(empty);
+      return;
+    }
+
+    caseState.records.forEach((record, index) => {
+      const article = document.createElement('article');
+      article.className = 'case-note-record';
+      article.dataset.caseId = record.id;
+
+      const header = document.createElement('div');
+      header.className = 'case-record-header';
+      const heading = document.createElement('h4');
+      heading.id = `case-record-title-${record.id}`;
+      heading.textContent = `${index + 1}. ${record.title}`;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'button button-secondary button-small';
+      remove.textContent = 'Прибрати приклад';
+      remove.setAttribute('aria-label', `Прибрати приклад «${record.title}»`);
+      remove.addEventListener('click', () => {
+        const checkbox = caseSelectionInputs.find((input) => input.value === record.id);
+        if (checkbox) checkbox.checked = false;
+        removeCaseRecord(record.id, checkbox || { checked: false });
+      });
+      header.append(heading, remove);
+      article.appendChild(header);
+
+      const fields = [
+        { key: 'problem', label: 'Яку управлінську проблему вирішувало місто?' },
+        { key: 'principle', label: 'Який принцип корисний для Вашої громади?' },
+        { key: 'localCheck', label: 'Що варто перевірити у своїй громаді через цей принцип?' }
+      ];
+      fields.forEach(({ key, label }) => {
+        const fieldId = `case-${record.id}-${key}`;
+        const wrapper = document.createElement('label');
+        wrapper.setAttribute('for', fieldId);
+        wrapper.textContent = label;
+        const textarea = document.createElement('textarea');
+        textarea.id = fieldId;
+        textarea.rows = 3;
+        textarea.value = record[key];
+        textarea.dataset.caseField = key;
+        textarea.addEventListener('input', () => {
+          record[key] = textarea.value;
+          saveCaseState();
+          refreshCaseDependentOutputs();
+        });
+        wrapper.appendChild(textarea);
+        article.appendChild(wrapper);
+      });
+      selectedCaseNotes.appendChild(article);
+    });
+  }
+
+  caseSelectionInputs.forEach((input) => input.addEventListener('change', () => {
+    const id = input.value;
+    if (input.checked) {
+      if (!caseState.records.some((record) => record.id === id) && CASE_BY_ID.has(id)) {
+        const item = CASE_BY_ID.get(id);
+        caseState.records.push({ id, title: item.title, problem: '', principle: '', localCheck: '' });
+      }
+      saveCaseState();
+      renderSelectedCaseNotes();
+      if (caseSelectionStatus) {
+        caseSelectionStatus.textContent = `Обрано прикладів: ${caseState.records.length}. Нотатки зберігаються у цьому браузері.`;
+        caseSelectionStatus.className = 'feedback is-correct';
+      }
+      refreshCaseDependentOutputs();
+    } else {
+      removeCaseRecord(id, input);
+    }
+  }));
 
   const transferDialog = document.getElementById('portfolio-transfer-dialog');
   const transferExisting = document.getElementById('portfolio-transfer-existing');
   const transferIncoming = document.getElementById('portfolio-transfer-incoming');
+  const transferCase = document.getElementById('portfolio-transfer-case');
+  const transferTargetLabel = document.getElementById('portfolio-transfer-target-label');
   const transferMergeButton = document.getElementById('portfolio-transfer-merge');
   const transferReplaceButton = document.getElementById('portfolio-transfer-replace');
+  const transferSkipButton = document.getElementById('portfolio-transfer-skip');
   const transferCancelButtons = [document.getElementById('portfolio-transfer-cancel'), document.getElementById('portfolio-transfer-cancel-top')].filter(Boolean);
-  let pendingCaseTransfer = null;
+  let pendingTransferConflicts = [];
+  let transferStats = null;
 
   function appendManagementSignal(decision, example) {
     const managementSignal = document.getElementById('management-signal');
-    if (!decision || !managementSignal) return;
-    const prefix = example ? `Орієнтир: ${example}. ` : '';
-    const addition = `${prefix}${decision}`;
+    if (!decision || !managementSignal) return false;
+    const addition = `${example}: ${decision}`;
     const existing = managementSignal.value.trim();
     if (!existing) managementSignal.value = addition;
-    else if (!existing.includes(addition)) managementSignal.value = `${existing}
-${addition}`;
+    else if (!existing.includes(addition)) managementSignal.value = `${existing}\n${addition}`;
+    else return false;
+    return true;
   }
 
-  function finishCaseTransfer({ principle, decision, example, targetField = null, strategy = 'set' }) {
-    if (principle && targetField) {
-      const existing = targetField.value.trim();
-      if (strategy === 'merge' && existing && !existing.includes(principle)) targetField.value = `${existing}; ${principle}`;
-      else if (strategy === 'replace' || !existing) targetField.value = principle;
-    }
-    appendManagementSignal(decision, example);
+  function finishMultiCaseTransfer(message = '') {
     savePortfolioSilently();
-    if (!portfolioSummary.hidden) renderPortfolioSummary();
-    caseTransferStatus.textContent = 'Підказки перенесено до практичної картки без втрати вже введених відповідей.';
+    refreshCaseDependentOutputs();
+    const summary = transferStats ? `Перенесено принципів: ${transferStats.principles}; локальних перевірок: ${transferStats.localChecks}; пропущено: ${transferStats.skipped}.` : '';
+    caseTransferStatus.textContent = message || `${summary} Ви залишаєтеся на цій сторінці й самі керуєте переходом до практичної картки.`;
     caseTransferStatus.className = 'feedback is-correct';
-    pendingCaseTransfer = null;
+    pendingTransferConflicts = [];
+    transferStats = null;
     if (transferDialog?.open) transferDialog.close();
-    showPage(8, { focus: true, bypassScenarioCheckpoint: true });
   }
 
-  if (caseTransferButton) {
-    caseTransferButton.addEventListener('click', () => {
-      const principle = document.getElementById('case-principle').value.trim();
-      const decision = document.getElementById('case-local-decision').value.trim();
-      const example = document.getElementById('case-example').value.trim();
-      if (!principle && !decision) {
-        caseTransferStatus.textContent = 'Запишіть хоча б принцип або рішення, яке варто перевірити.';
-        caseTransferStatus.className = 'feedback is-incorrect';
-        return;
-      }
-      const principleFields = [document.getElementById('principle-1'), document.getElementById('principle-2'), document.getElementById('principle-3')].filter(Boolean);
-      const emptyField = principleFields.find((field) => !field.value.trim());
-      if (!principle || emptyField) {
-        finishCaseTransfer({ principle, decision, example, targetField: emptyField || null });
-        return;
-      }
-      pendingCaseTransfer = { principle, decision, example, targetField: principleFields[0] };
-      transferExisting.textContent = principleFields[0].value.trim();
-      transferIncoming.textContent = principle;
-      transferDialog.showModal();
-      transferMergeButton.focus();
-    });
+  function showNextTransferConflict() {
+    const conflict = pendingTransferConflicts[0];
+    if (!conflict) {
+      finishMultiCaseTransfer();
+      return;
+    }
+    transferCase.textContent = conflict.record.title;
+    transferTargetLabel.textContent = `Поточне значення поля «${conflict.targetLabel}»`;
+    transferExisting.textContent = conflict.targetField.value.trim();
+    transferIncoming.textContent = conflict.record.principle.trim();
+    transferDialog.showModal();
+    transferMergeButton.focus();
   }
-  transferMergeButton?.addEventListener('click', () => pendingCaseTransfer && finishCaseTransfer({ ...pendingCaseTransfer, strategy: 'merge' }));
-  transferReplaceButton?.addEventListener('click', () => pendingCaseTransfer && finishCaseTransfer({ ...pendingCaseTransfer, strategy: 'replace' }));
-  transferCancelButtons.forEach((button) => button.addEventListener('click', () => transferDialog.close()));
+
+  function resolveTransferConflict(strategy) {
+    const conflict = pendingTransferConflicts.shift();
+    if (!conflict) return;
+    const incoming = conflict.record.principle.trim();
+    const existing = conflict.targetField.value.trim();
+    if (strategy === 'merge') {
+      if (!existing.includes(incoming)) conflict.targetField.value = `${existing}; ${incoming}`;
+      transferStats.principles += 1;
+    } else if (strategy === 'replace') {
+      conflict.targetField.value = incoming;
+      transferStats.principles += 1;
+    } else {
+      transferStats.skipped += 1;
+    }
+    if (transferDialog.open) transferDialog.close();
+    window.setTimeout(showNextTransferConflict, 0);
+  }
+
+  caseTransferButton?.addEventListener('click', () => {
+    const records = caseRecordsForOutput();
+    if (!records.length) {
+      caseTransferStatus.textContent = 'Оберіть приклади й запишіть хоча б один висновок.';
+      caseTransferStatus.className = 'feedback is-incorrect';
+      return;
+    }
+    const principleFields = [
+      { field: document.getElementById('principle-1'), label: 'Принцип 1' },
+      { field: document.getElementById('principle-2'), label: 'Принцип 2' },
+      { field: document.getElementById('principle-3'), label: 'Принцип 3' }
+    ].filter((item) => item.field);
+    pendingTransferConflicts = [];
+    transferStats = { principles: 0, localChecks: 0, skipped: 0 };
+    let occupiedTargetIndex = 0;
+
+    records.forEach((record) => {
+      const principle = record.principle.trim();
+      if (principle) {
+        const duplicate = principleFields.some(({ field }) => field.value.trim() === principle || field.value.split(';').map((value) => value.trim()).includes(principle));
+        if (duplicate) {
+          transferStats.skipped += 1;
+        } else {
+          const emptyTarget = principleFields.find(({ field }) => !field.value.trim());
+          if (emptyTarget) {
+            emptyTarget.field.value = principle;
+            transferStats.principles += 1;
+          } else {
+            const target = principleFields[occupiedTargetIndex % principleFields.length];
+            occupiedTargetIndex += 1;
+            pendingTransferConflicts.push({ record, targetField: target.field, targetLabel: target.label });
+          }
+        }
+      }
+      if (record.localCheck.trim() && appendManagementSignal(record.localCheck.trim(), record.title)) transferStats.localChecks += 1;
+    });
+
+    savePortfolioSilently();
+    if (pendingTransferConflicts.length) showNextTransferConflict();
+    else finishMultiCaseTransfer();
+  });
+
+  transferMergeButton?.addEventListener('click', () => resolveTransferConflict('merge'));
+  transferReplaceButton?.addEventListener('click', () => resolveTransferConflict('replace'));
+  transferSkipButton?.addEventListener('click', () => resolveTransferConflict('skip'));
+  transferCancelButtons.forEach((button) => button.addEventListener('click', () => {
+    const stats = transferStats;
+    pendingTransferConflicts = [];
+    transferStats = null;
+    if (transferDialog?.open) transferDialog.close();
+    savePortfolioSilently();
+    refreshCaseDependentOutputs();
+    caseTransferStatus.textContent = stats ? `Перенесення зупинено. Уже додано принципів: ${stats.principles}; локальних перевірок: ${stats.localChecks}.` : 'Перенесення скасовано.';
+    caseTransferStatus.className = 'feedback';
+  }));
   transferDialog?.addEventListener('close', () => caseTransferButton?.focus());
-  transferDialog?.addEventListener('click', (event) => { if (event.target === transferDialog) transferDialog.close(); });
-  restoreCaseNotes();
+  transferDialog?.addEventListener('click', (event) => {
+    if (event.target === transferDialog) {
+      pendingTransferConflicts = [];
+      transferStats = null;
+      transferDialog.close();
+      caseTransferStatus.textContent = 'Перенесення зупинено. Уже додані неперезаписувальні значення збережено.';
+      caseTransferStatus.className = 'feedback';
+    }
+  });
+
+  restoreCaseState();
+  renderSelectedCaseNotes();
+  updateCaseCommunityName();
 
   // Interactive concept matching.
   const scenarios = [...document.querySelectorAll('.scenario')];
@@ -589,6 +812,9 @@ ${addition}`;
   const portfolioSummary = document.getElementById('portfolio-summary');
   const portfolioSummaryList = document.getElementById('portfolio-summary-list');
   const portfolioDate = document.getElementById('portfolio-date');
+  const portfolioSummaryVision = document.getElementById('portfolio-summary-vision');
+  const portfolioSummaryCases = document.getElementById('portfolio-summary-cases');
+  const portfolioSummaryCasesList = document.getElementById('portfolio-summary-cases-list');
   const printPortfolioButton = document.getElementById('print-portfolio');
   const summaryPrintButton = document.getElementById('summary-print-portfolio');
   const editPortfolioButton = document.getElementById('edit-portfolio');
@@ -602,7 +828,7 @@ ${addition}`;
   const labels = {
     communityName: 'Назва громади',
     climateChallenge: 'Головний кліматичний виклик із попереднього заняття',
-    communityVision: 'Якою громадою ми хочемо стати?',
+    communityVision: 'Попередній ескіз бажаного стану громади',
     resilienceRole: 'Що означає кліматична стійкість для цієї візії?',
     nbsRole: 'Яку роль можуть відіграти природоорієнтовані рішення?',
     resourceLoss: 'Яку ресурсну втрату має зменшити циркулярна економіка?',
@@ -628,23 +854,94 @@ ${addition}`;
     portfolioStatus.className = saved ? 'feedback is-correct' : 'feedback is-incorrect';
   }
 
+  function normalizeStorageFieldName(value) {
+    return String(value || '').toLowerCase().replace(/[^a-zа-яіїєґ0-9]/gi, '');
+  }
+
+  function findStringByAliases(source, aliases, depth = 0) {
+    if (!source || typeof source !== 'object' || depth > 3) return '';
+    const normalizedAliases = new Set(aliases.map(normalizeStorageFieldName));
+    for (const [key, value] of Object.entries(source)) {
+      const normalizedKey = normalizeStorageFieldName(key);
+      const matchesAlias = [...normalizedAliases].some((alias) => normalizedKey === alias || normalizedKey.endsWith(alias));
+      if (typeof value === 'string' && value.trim() && matchesAlias) return value.trim();
+    }
+    for (const value of Object.values(source)) {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const nested = findStringByAliases(value, aliases, depth + 1);
+        if (nested) return nested;
+      }
+    }
+    return '';
+  }
+
+  function importLesson01Context() {
+    const communityField = portfolioForm.elements.communityName;
+    const challengeField = portfolioForm.elements.climateChallenge;
+    if ((!communityField || communityField.value.trim()) && (!challengeField || challengeField.value.trim())) return false;
+
+    const verifiedCandidateKeys = ['ucan_l01_portfolio_v1', 'ucan_l01_portfolio_v2', 'ucan_lesson_01_portfolio_v1', 'ucan_lesson01_portfolio_v1'];
+    const lesson01Pattern = /(?:^|[_-])(?:ucan[_-]?)?(?:lesson[_-]?)?l?0?1(?:[_-]|$)/i;
+    const availableKeys = safeStorage.keys();
+    const fallbackKeys = availableKeys.filter((key) => lesson01Pattern.test(key) && !verifiedCandidateKeys.includes(key));
+    const candidateKeys = [...verifiedCandidateKeys.filter((key) => availableKeys.includes(key)), ...fallbackKeys];
+    const sources = [];
+
+    candidateKeys.forEach((key) => {
+      const raw = safeStorage.get(key);
+      if (typeof raw !== 'string' || !raw.trim()) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') sources.push(parsed);
+      } catch (error) {
+        sources.push({ [key]: raw });
+      }
+    });
+
+    const communityAliases = ['communityName', 'community', 'community_name', 'municipalityName', 'cityName', 'hromadaName', 'назваГромади', 'громада'];
+    const challengeAliases = ['climateChallenge', 'mainClimateChallenge', 'primaryClimateChallenge', 'mainChallenge', 'challenge', 'climateProblem', 'climate_problem', 'головнийКліматичнийВиклик', 'кліматичнийВиклик'];
+    let imported = false;
+
+    if (communityField && !communityField.value.trim()) {
+      for (const source of sources) {
+        const value = findStringByAliases(source, communityAliases);
+        if (value) { communityField.value = value; imported = true; break; }
+      }
+    }
+    if (challengeField && !challengeField.value.trim()) {
+      for (const source of sources) {
+        const value = findStringByAliases(source, challengeAliases);
+        if (value) { challengeField.value = value; imported = true; break; }
+      }
+    }
+
+    if (imported) {
+      savePortfolioSilently();
+      portfolioStatus.textContent = 'Доступний контекст із попереднього заняття підставлено до порожніх полів. Ви можете відредагувати його.';
+      portfolioStatus.className = 'feedback is-correct';
+    }
+    return imported;
+  }
+
   function restorePortfolio() {
     const raw = safeStorage.get(FORM_KEY);
-    if (!raw) return;
-    try {
-      const data = JSON.parse(raw);
-      portfolioFields.forEach((field) => {
-        if (typeof data[field.name] === 'string') field.value = data[field.name];
-      });
-    } catch (error) {
-      safeStorage.remove(FORM_KEY);
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        portfolioFields.forEach((field) => {
+          if (typeof data[field.name] === 'string') field.value = data[field.name];
+        });
+      } catch (error) {
+        safeStorage.remove(FORM_KEY);
+      }
     }
+    importLesson01Context();
   }
 
   function buildAiPrompt(mode = 'facts') {
     const data = formDataObject();
     const principles = [data.principle1, data.principle2, data.principle3].filter((value) => value && value.trim()).join('; ') || '[не заповнено]';
-    const caseNotes = caseDataObject();
+    const selectedCaseContext = caseRecordText();
     const contracts = {
       facts: {
         title: 'РЕЖИМ: ПЕРЕВІРКА ФАКТІВ І ПРИПУЩЕНЬ',
@@ -690,7 +987,10 @@ ${data.communityName || '[не заповнено]'}
 Головний кліматичний виклик:
 ${data.climateChallenge || '[не заповнено]'}
 
-Бажаний стан громади:
+Кліматично нейтральна візія громади:
+${data.climateNeutralVision || '[не заповнено]'}
+
+Попередній ескіз бажаного стану громади:
 ${data.communityVision || '[не заповнено]'}
 
 Кліматична стійкість у цій візії:
@@ -708,12 +1008,35 @@ ${principles}
 Перший управлінський сигнал:
 ${data.managementSignal || '[не заповнено]'}
 
-ОРІЄНТИР ІЗ КЕЙСУ
-Місто або приклад:
-${caseNotes['case-example'] || '[не обрано]'}
+ВИСНОВКИ З ОБРАНИХ КЕЙСІВ
+${selectedCaseContext}`;
+  }
 
-Принцип із кейсу:
-${caseNotes['case-principle'] || '[не заповнено]'}`;
+  function renderCaseSummary() {
+    if (!portfolioSummaryCases || !portfolioSummaryCasesList) return;
+    const records = caseRecordsForOutput();
+    portfolioSummaryCasesList.innerHTML = '';
+    portfolioSummaryCases.hidden = records.length === 0;
+    records.forEach((record, index) => {
+      const article = document.createElement('article');
+      article.className = 'case-summary-record';
+      const heading = document.createElement('h4');
+      heading.textContent = `${index + 1}. ${record.title}`;
+      const list = document.createElement('dl');
+      [
+        ['Що вирішувало місто', record.problem],
+        ['Корисний принцип', record.principle],
+        ['Що варто перевірити у своїй громаді', record.localCheck]
+      ].forEach(([label, value]) => {
+        const dt = document.createElement('dt');
+        const dd = document.createElement('dd');
+        dt.textContent = label;
+        dd.textContent = value.trim() || '—';
+        list.append(dt, dd);
+      });
+      article.append(heading, list);
+      portfolioSummaryCasesList.appendChild(article);
+    });
   }
 
   function renderPortfolioSummary() {
@@ -736,6 +1059,8 @@ ${caseNotes['case-principle'] || '[не заповнено]'}`;
       dd.textContent = values[key] || '—';
       portfolioSummaryList.append(dt, dd);
     });
+    if (portfolioSummaryVision) portfolioSummaryVision.textContent = data.climateNeutralVision || '—';
+    renderCaseSummary();
     portfolioDate.textContent = new Date().toLocaleDateString('uk-UA');
     portfolioSummary.hidden = false;
     printPortfolioButton.disabled = false;
@@ -744,14 +1069,10 @@ ${caseNotes['case-principle'] || '[не заповнено]'}`;
 
   portfolioFields.forEach((field) => field.addEventListener('input', () => {
     savePortfolioSilently();
+    updateCaseCommunityName();
     aiPromptText.textContent = currentAiPrompt();
     if (!portfolioSummary.hidden) renderPortfolioSummary();
   }));
-
-  caseFields.forEach((field) => {
-    field.addEventListener('input', () => { aiPromptText.textContent = currentAiPrompt(); });
-    field.addEventListener('change', () => { aiPromptText.textContent = currentAiPrompt(); });
-  });
 
   portfolioForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -768,7 +1089,9 @@ ${caseNotes['case-principle'] || '[не заповнено]'}`;
     const pdfData = {
       communityName: data.communityName,
       climateChallenge: data.climateChallenge,
+      climateNeutralVision: data.climateNeutralVision,
       communityVision: data.communityVision,
+      caseInsights: caseRecordText(),
       resilienceRole: data.resilienceRole,
       nbsRole: data.nbsRole,
       resourceLoss: data.resourceLoss,
@@ -781,7 +1104,18 @@ ${caseNotes['case-principle'] || '[не заповнено]'}`;
       title: 'Картка кліматично нейтральної візії громади',
       label: 'Портфель мера',
       filename: community ? `UCAN_Картка_кліматично_нейтральної_візії_${community}.pdf` : 'UCAN_Картка_кліматично_нейтральної_візії.pdf',
-      fields: Object.entries(labels).map(([key, label]) => ({ key, label })),
+      fields: [
+        { key: 'communityName', label: labels.communityName },
+        { key: 'climateChallenge', label: labels.climateChallenge },
+        { key: 'climateNeutralVision', label: 'Фінальна кліматично нейтральна візія громади' },
+        { key: 'communityVision', label: labels.communityVision },
+        { key: 'caseInsights', label: 'Висновки з обраних кейсів' },
+        { key: 'resilienceRole', label: labels.resilienceRole },
+        { key: 'nbsRole', label: labels.nbsRole },
+        { key: 'resourceLoss', label: labels.resourceLoss },
+        { key: 'principles', label: labels.principles },
+        { key: 'managementSignal', label: labels.managementSignal }
+      ],
       data: pdfData,
       note: 'Чернетка створена учасником. Перевірте зміст разом із командою громади.'
     });
@@ -797,6 +1131,11 @@ ${caseNotes['case-principle'] || '[не заповнено]'}`;
   window.addEventListener('afterprint', () => document.body.classList.remove('print-portfolio'));
 
   const currentAiPrompt = () => buildAiPrompt(document.querySelector('input[name="l02-ai-mode"]:checked')?.value || 'facts');
+  document.querySelectorAll('[data-ai-platform]').forEach((link) => link.addEventListener('click', () => {
+    const platform = link.dataset.aiPlatform || 'AI-платформу';
+    aiPromptStatus.textContent = `${platform} відкривається в новій вкладці. Вставте скопійований запит у чат і самостійно перевірте результат.`;
+    aiPromptStatus.className = 'feedback';
+  }));
   document.querySelectorAll('input[name="l02-ai-mode"]').forEach(input => input.addEventListener('change', () => { aiPromptText.textContent = currentAiPrompt(); aiPromptStatus.textContent = 'Режим змінено. Запит оновлено.'; input.focus(); }));
 
   copyAiPromptButton.addEventListener('click', async () => {
@@ -870,6 +1209,7 @@ ${caseNotes['case-principle'] || '[не заповнено]'}`;
     const confirmed = window.confirm('Очистити всі поля Картки кліматично нейтральної візії громади?');
     if (!confirmed) return;
     portfolioForm.reset();
+    updateCaseCommunityName();
     safeStorage.remove(FORM_KEY);
     portfolioSummary.hidden = true;
     printPortfolioButton.disabled = true;
@@ -879,6 +1219,7 @@ ${caseNotes['case-principle'] || '[не заповнено]'}`;
   });
 
   restorePortfolio();
+  updateCaseCommunityName();
   aiPromptText.textContent = currentAiPrompt();
   if (formHasContent()) renderPortfolioSummary();
 

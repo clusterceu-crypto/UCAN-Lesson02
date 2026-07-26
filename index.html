@@ -19,6 +19,7 @@
 <div class="lead-card">
 <h2><span aria-hidden="true">🎯</span> Після цього заняття Ви зможете</h2>
 <p>Простою управлінською мовою пояснити кліматичну стійкість, природоорієнтовані рішення, циркулярну економіку та роль візії громади, місії та кліматичної стратегії, а також перетворити кліматичний виклик із попереднього заняття на першу кліматично нейтральну візію громади.</p>
+<p>Уміє сформулювати первинну кліматично нейтральну візію власної громади на основі визначеного виклику, прикладів інших міст та обраних принципів.</p>
 </div>
 <div class="content-grid two-col">
 <article>
@@ -83,6 +84,7 @@
 </div>
 <p>Команда може відреагувати по-різному. Перший варіант — просто збільшити бетонні водовідвідні конструкції. Другий — подивитися на територію як на систему: вода, зелені зони, поверхні, мобільність, комфорт, безпека. Третій — одночасно поставити питання про матеріали, витрати, догляд, повторне використання, дані та участь мешканців.</p>
 <p>Саме друга і третя реакції наближають громаду до кліматично нейтральної логіки. Вони не заперечують інженерію. Вони ставлять ширше управлінське питання: яке місто ми створюємо цим рішенням?</p>
+<p><strong>Практичний фокус:</strong> результатом цього заняття стане сформульована Вами первинна кліматично нейтральна візія громади — на основі визначеного виклику, прикладів інших міст та обраних принципів.</p>
 <section aria-labelledby="comparison-title" class="comparison">
 <h2 id="comparison-title">Лише ремонт проблеми чи крок до майбутнього міста?</h2>
 <div class="comparison-grid">
@@ -227,28 +229,20 @@
 </div>
 <div aria-labelledby="case-task-title" class="micro-task">
 <h3 id="case-task-title"><span aria-hidden="true">✍️</span> Маленьке завдання перед практичною карткою</h3>
-<p>Оберіть один приклад, найближчий до виклику Вашої громади. Запишіть висновок своїми словами.</p>
-<div class="case-note-form">
-<label for="case-example">Орієнтир
-                <select id="case-example" name="caseExample">
-<option value="">Оберіть приклад</option>
-<option value="Львів — системна візія громади">Львів — системна візія громади</option>
-<option value="Роттердам — багатофункціональна водна площа">Роттердам — багатофункціональна водна площа</option>
-<option value="Амстердам — циркулярність у міських рішеннях">Амстердам — циркулярність у міських рішеннях</option>
-<option value="Левен — від візії до дорожньої карти">Левен — від візії до дорожньої карти</option>
-</select>
-</label>
-<label for="case-problem">Яку управлінську проблему вирішувало місто?
-                <textarea id="case-problem" name="caseProblem" rows="3"></textarea>
-</label>
-<label for="case-principle">Який принцип можна адаптувати у Вашій громаді?
-                <textarea id="case-principle" name="casePrinciple" rows="3"></textarea>
-</label>
-<label for="case-local-decision">Яке рішення Вашої громади варто перевірити через цей принцип?
-                <textarea id="case-local-decision" name="caseLocalDecision" rows="3"></textarea>
-</label>
+<p>Порівняйте один або кілька прикладів із викликом <strong id="case-community-name">Вашої громади</strong>. Для кожного обраного прикладу запишіть окремий висновок своїми словами.</p>
+<fieldset class="case-selection-fieldset">
+<legend>Оберіть один або кілька прикладів</legend>
+<div class="case-selection-grid">
+<label class="case-selection-option"><input data-case-select="" type="checkbox" value="lviv"/> <span>Львів — системна візія громади</span></label>
+<label class="case-selection-option"><input data-case-select="" type="checkbox" value="rotterdam"/> <span>Роттердам — багатофункціональна водна площа</span></label>
+<label class="case-selection-option"><input data-case-select="" type="checkbox" value="amsterdam"/> <span>Амстердам — циркулярність у міських рішеннях</span></label>
+<label class="case-selection-option"><input data-case-select="" type="checkbox" value="leuven"/> <span>Левен — від візії до дорожньої карти</span></label>
 </div>
-<button class="button button-primary" id="case-transfer" type="button">Перенести підказки до практичної картки</button>
+</fieldset>
+<p class="field-hint">Для кожного прикладу збережіть: що вирішувало місто, який принцип корисний і що варто перевірити у своїй громаді.</p>
+<div aria-live="polite" class="feedback" id="case-selection-status" role="status"></div>
+<div class="selected-case-notes" id="selected-case-notes"></div>
+<button class="button button-primary" id="case-transfer" type="button">Перенести всі висновки до практичної картки</button>
 <div aria-live="polite" class="feedback" id="case-transfer-status" role="status"></div>
 </div>
 </section>
@@ -356,14 +350,14 @@
 <p>Перетворіть кліматичний виклик із попереднього заняття на коротку позитивну управлінську рамку майбутнього. Це не стратегія і не план дій, а перша чернетка бачення для подальшої роботи команди.</p>
 <div class="steps-grid">
 <article><h2>Крок 1. Візьміть кліматичний виклик із попереднього заняття</h2><p>Запишіть проблему, яку громада визначила як головний кліматичний або ресурсний виклик. Уточніть, кого вона зачіпає, які послуги або об’єкти під ризиком і які наслідки виникають.</p></article>
-<article><h2>Крок 2. Сформулюйте бажаний стан громади</h2><p>Напишіть 1–2 речення: якою має стати громада, якщо вона навчиться вирішувати цей виклик через стійкість, природоорієнтовані рішення (NBS), циркулярність і дані.</p></article>
+<article><h2>Крок 2. Створіть попередній ескіз бажаного стану</h2><p>Коротко опишіть, якою має стати громада після подолання визначеного виклику. Це підготовчий ескіз для фінального формулювання кліматично нейтральної візії.</p></article>
 <article><h2>Крок 3. Визначте три принципи майбутніх рішень</h2><ul><li>Який принцип стійкості має бути обов’язковим?</li><li>Де природоорієнтовані рішення (NBS) можуть бути частиною рішення або перевірки?</li><li>Яку ресурсну втрату може зменшити циркулярна логіка?</li></ul></article>
 <article><h2>Крок 4. Заповніть форму</h2><p>Відповіді зберігаються у цьому браузері. Після збереження Ви отримаєте картку для друку, PDF та аналізу з AI-помічником.</p></article>
 </div>
 <form class="portfolio-form" id="portfolio-form" novalidate="">
 <div class="form-field"><label for="community-name">Назва громади</label><input autocomplete="organization" id="community-name" name="communityName" type="text"/></div>
 <div class="form-field"><label for="climate-challenge">Головний кліматичний виклик із попереднього заняття</label><textarea id="climate-challenge" name="climateChallenge" rows="4"></textarea></div>
-<div class="form-field"><label for="community-vision">Якою громадою ми хочемо стати?</label><textarea id="community-vision" name="communityVision" rows="4"></textarea></div>
+<div class="form-field"><label for="community-vision">Попередній ескіз бажаного стану громади</label><p id="community-vision-help">Коротко опишіть, якою має стати громада після подолання визначеного виклику. Нижче Ви сформулюєте фінальну інтегровану візію.</p><textarea aria-describedby="community-vision-help" id="community-vision" name="communityVision" rows="4"></textarea></div>
 <div class="form-field"><label for="resilience-role">Що означає кліматична стійкість для цієї візії?</label><textarea id="resilience-role" name="resilienceRole" rows="4"></textarea></div>
 <div class="form-field"><label for="nbs-role">Яку роль можуть відіграти природоорієнтовані рішення?</label><textarea id="nbs-role" name="nbsRole" rows="4"></textarea></div>
 <div class="form-field"><label for="resource-loss">Яку ресурсну втрату має зменшити циркулярна економіка?</label><textarea id="resource-loss" name="resourceLoss" rows="4"></textarea></div>
@@ -374,9 +368,14 @@
 <label for="principle-3">Принцип 3</label><input id="principle-3" name="principle3" type="text"/>
 </fieldset>
 <div class="form-field"><label for="management-signal">Який перший управлінський сигнал можна дати команді?</label><textarea id="management-signal" name="managementSignal" rows="4"></textarea></div>
+<div class="form-field">
+<label for="climate-neutral-vision">Фінальна кліматично нейтральна візія Вашої громади</label>
+<p id="climate-neutral-vision-help">Спираючись на визначений виклик, приклади інших міст та обрані принципи, сформулюйте одним або двома реченнями бажаний майбутній стан Вашої громади.</p>
+<textarea aria-describedby="climate-neutral-vision-help" id="climate-neutral-vision" name="climateNeutralVision" placeholder="Наша громада прагне стати…" rows="5"></textarea>
+</div>
 <div class="form-actions">
 <button class="button button-primary" type="submit">💾 Зберегти карту</button>
-<button class="button button-secondary button-primary" disabled="" id="print-portfolio" type="button">📥 Завантажити PDF</button>
+<button class="button button-secondary" disabled="" id="print-portfolio" type="button">🖨️ Друк / Зберегти як PDF</button>
 <button class="button button-danger" id="clear-portfolio" type="button">🗑️ Очистити практичне завдання</button>
 </div>
 <div aria-live="polite" class="feedback" id="portfolio-status" role="status"></div>
@@ -385,6 +384,14 @@
 <p class="print-kicker">Заняття 2 · Портфель мера</p>
 <h2 id="portfolio-summary-title">Картка кліматично нейтральної візії громади</h2>
 <div class="portfolio-meta"><span><strong>Дата формування:</strong> <span id="portfolio-date"></span></span><span><strong>Статус:</strong> Чернетка для обговорення з командою</span></div>
+<div class="callout tip" id="portfolio-vision-summary-block">
+<h3>Фінальна кліматично нейтральна візія громади</h3>
+<p id="portfolio-summary-vision">—</p>
+</div>
+<section aria-labelledby="portfolio-summary-cases-title" class="case-insights-summary" hidden="" id="portfolio-summary-cases">
+<h3 id="portfolio-summary-cases-title">Висновки з обраних кейсів</h3>
+<div id="portfolio-summary-cases-list"></div>
+</section>
 <dl id="portfolio-summary-list"></dl>
 <div class="summary-actions">
 <button class="button button-secondary" id="edit-portfolio" type="button">Редагувати картку</button>
@@ -399,7 +406,7 @@
 <li>Картку можна використати як основу для наступного заняття про технології та цифровізацію.</li>
 </ul>
 </section>
-<div class="page-shell ai-practical-block"><div class="ucan-block-label">AI-ПІДТРИМКА</div><h2 class="ai-section-title">AI-підтримка (необов’язково)</h2><p class="lead">Використайте ШІ після того, як сформулювали власну відповідь. ШІ може допомогти перевірити логіку, поставити уточнювальні питання або знайти слабкі місця, але не ухвалює рішення замість Вас.</p><p>Запит формується лише з полів артефакту «Картка кліматично нейтральної візії громади», які Ви заповнили у цьому браузері.</p><fieldset aria-describedby="l02-ai-safety" class="ai-mode-selector"><legend>Оберіть режим AI-підтримки</legend><label class="ai-mode-option choice-card"><input checked="" name="l02-ai-mode" type="radio" value="facts"/><span>Перевірити факти й припущення</span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="questions"/><span>Поставити уточнювальні питання</span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="structure"/><span>Перевірити повноту та слабкі місця рішення</span></label></fieldset><h2>Попередній перегляд запиту</h2><pre aria-label="Підготовлений запит для ШІ" class="ai-prompt-preview" id="ai-prompt-text" tabindex="0">Заповніть практичну форму та оберіть режим підтримки.</pre><div class="button-row ai-actions"><button class="button button-secondary" id="preview-ai-prompt" type="button">👁️ Переглянути запит</button><button class="button button-primary" id="copy-ai-prompt" type="button">📋 Скопіювати запит</button><a aria-label="Відкрити ChatGPT у новій вкладці" class="button button-external" href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank">🤖 Відкрити ChatGPT ↗</a><a aria-label="Відкрити Gemini у новій вкладці" class="button button-external" href="https://gemini.google.com/app" rel="noopener noreferrer" target="_blank">✨ Відкрити Gemini ↗</a></div><div aria-live="polite" class="feedback" id="ai-prompt-status" role="status"></div><aside class="callout safety-boundary" id="l02-ai-safety" role="note"><h2>Безпека та відповідальність</h2><p>Не вставляйте персональні дані, конфіденційну інформацію, службові документи або неперевірені чутливі дані.</p><p>Перевіряйте факти та зберігайте відповідальність за остаточне управлінське рішення.</p></aside></div></div>
+<div class="page-shell ai-practical-block"><div class="ucan-block-label">AI-ПІДТРИМКА</div><h2 class="ai-section-title">AI-підтримка (необов’язково)</h2><p class="lead">Використайте ШІ після того, як сформулювали власну відповідь. ШІ може допомогти перевірити логіку, поставити уточнювальні питання або знайти слабкі місця, але не ухвалює рішення замість Вас.</p><p>Запит формується з полів артефакту та збережених Вами висновків із вибраних кейсів. Дані не передаються автоматично.</p><ol class="ai-steps" aria-label="Послідовність роботи з AI-підтримкою"><li>Оберіть режим.</li><li>Перегляньте запит.</li><li>Скопіюйте запит.</li><li>Відкрийте ChatGPT або Gemini.</li><li>Вставте запит у чат.</li><li>Перевірте результат самостійно.</li></ol><fieldset aria-describedby="l02-ai-safety" class="ai-mode-selector"><legend>Оберіть режим AI-підтримки</legend><label class="ai-mode-option choice-card"><input checked="" name="l02-ai-mode" type="radio" value="facts"/><span>Перевірити факти й припущення</span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="questions"/><span>Поставити уточнювальні питання</span></label><label class="ai-mode-option choice-card"><input name="l02-ai-mode" type="radio" value="structure"/><span>Перевірити повноту та слабкі місця рішення</span></label></fieldset><h2>Попередній перегляд запиту</h2><pre aria-label="Підготовлений запит для ШІ" class="ai-prompt-preview" id="ai-prompt-text" tabindex="0">Заповніть практичну форму та оберіть режим підтримки.</pre><div class="button-row ai-actions"><button class="button button-secondary" id="preview-ai-prompt" type="button">👁️ Переглянути запит</button><button class="button button-primary" id="copy-ai-prompt" type="button">📋 Скопіювати запит</button><a aria-label="Відкрити ChatGPT у новій вкладці" class="button button-external" data-ai-platform="ChatGPT" href="https://chatgpt.com/" rel="noopener noreferrer" target="_blank">🤖 Відкрити ChatGPT ↗</a><a aria-label="Відкрити Gemini у новій вкладці" class="button button-external" data-ai-platform="Gemini" href="https://gemini.google.com/app" rel="noopener noreferrer" target="_blank">✨ Відкрити Gemini ↗</a></div><div aria-live="polite" class="feedback" id="ai-prompt-status" role="status"></div><aside class="callout safety-boundary" id="l02-ai-safety" role="note"><h2>Безпека та відповідальність</h2><p>Не вставляйте персональні дані, конфіденційну інформацію, службові документи або неперевірені чутливі дані.</p><p>Перевіряйте факти та зберігайте відповідальність за остаточне управлінське рішення.</p></aside></div></div>
 </section>
 <section aria-labelledby="page-9-title" class="lesson-page" data-page="9" data-page-label="Підсумковий тест" id="page-9">
 <div class="page-shell ucan-page-card">
@@ -475,6 +482,10 @@
 <h2><span aria-hidden="true">➡️</span> У наступному занятті</h2>
 <p>У цьому занятті Ви сформулювали першу кліматично нейтральну візію. Наступний крок — зрозуміти, як технології, цифровізація й дані можуть допомогти цю візію підтримати, а не перетворитися на “технології заради технологій”.</p>
 </div>
+<nav aria-label="Переходи між заняттями" class="button-row adjacent-lesson-links">
+<a class="button button-secondary" aria-label="Відкрити попереднє заняття у новій вкладці" href="https://clusterceu-crypto.github.io/UCAN-Lesson01/" rel="prev noopener noreferrer" target="_blank">← Попереднє заняття</a>
+<a class="button button-primary" aria-label="Відкрити наступне заняття у новій вкладці" href="https://clusterceu-crypto.github.io/UCAN-Lesson03/" rel="next noopener noreferrer" target="_blank">Наступне заняття →</a>
+</nav>
 </div>
 </section>
 </main>
@@ -500,17 +511,19 @@
 <div class="dialog-card">
 <div class="dialog-header">
 <h2 id="portfolio-transfer-title">Захист заповненого Portfolio</h2>
-<button aria-label="Скасувати перенесення" class="button button-secondary button-small" id="portfolio-transfer-cancel-top" type="button">Закрити</button>
+<button aria-label="Скасувати решту перенесення" class="button button-secondary button-small" id="portfolio-transfer-cancel-top" type="button">Закрити</button>
 </div>
-<p>Усі три поля принципів уже заповнені. Оберіть, як додати принцип із кейсу.</p>
+<p>Цільове поле вже заповнене. Оберіть дію для поточного висновку; інші відповіді не буде змінено без Вашого рішення.</p>
+<p><strong>Кейс:</strong> <span id="portfolio-transfer-case"></span></p>
 <div class="transfer-comparison">
-<div><strong>Поточний перший принцип</strong><p id="portfolio-transfer-existing"></p></div>
+<div><strong id="portfolio-transfer-target-label">Поточне значення</strong><p id="portfolio-transfer-existing"></p></div>
 <div><strong>Принцип із кейсу</strong><p id="portfolio-transfer-incoming"></p></div>
 </div>
 <div class="button-row dialog-actions">
-<button class="button button-primary" id="portfolio-transfer-merge" type="button">Додати як уточнення</button>
-<button class="button button-danger" id="portfolio-transfer-replace" type="button">Замінити перший принцип</button>
-<button class="button button-secondary" id="portfolio-transfer-cancel" type="button">Скасувати</button>
+<button class="button button-primary" id="portfolio-transfer-merge" type="button">Додати до поля</button>
+<button class="button button-danger" id="portfolio-transfer-replace" type="button">Замінити значення</button>
+<button class="button button-secondary" id="portfolio-transfer-skip" type="button">Пропустити цей висновок</button>
+<button class="button button-secondary" id="portfolio-transfer-cancel" type="button">Скасувати решту</button>
 </div>
 </div>
 </dialog><nav aria-label="Переходи між сторінками" class="lesson-nav">

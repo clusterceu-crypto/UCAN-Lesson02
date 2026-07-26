@@ -766,7 +766,7 @@ body[data-ucan-interface="1.0"] .lesson-nav { top: auto !important; }
 body[data-ucan-interface="1.0"] .site-header .brand { background: transparent !important; padding: 0 !important; border-radius: 0 !important; width: auto !important; height: auto !important; }
 
 
-/* Gold Release Candidate v2.0: controlled architecture and accessibility merge. */
+/* Gold Release v2.2: completed local Lesson 02 production layer. */
 body[data-ucan-interface="1.0"] .ucan-page-title,
 body[data-ucan-interface="1.0"] h1,
 body[data-ucan-interface="1.0"] h2,
@@ -916,4 +916,53 @@ body.is-completed .progress-fill { background: var(--green, #2d7b55); }
   .image-lightbox,
   .image-zoom-trigger { display: none !important; }
   .learning-visual .image-zoom-trigger { display: block !important; }
+}
+
+/* Lesson 02 Gold completion: multi-case micro-task and provenance */
+.case-selection-fieldset {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  background: var(--white);
+}
+.case-selection-fieldset legend { padding-inline: .35rem; color: var(--navy-deep); font-weight: 800; }
+.case-selection-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+.case-selection-option {
+  display: flex;
+  gap: .65rem;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: .8rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 10px;
+  background: var(--gray-050);
+  cursor: pointer;
+}
+.case-selection-option:has(input:checked) { border-color: var(--green); box-shadow: 0 0 0 2px var(--green-soft); background: var(--white); }
+.case-selection-option input { flex: 0 0 auto; width: 1.25rem; height: 1.25rem; margin-top: .1rem; }
+.selected-case-notes { display: grid; gap: 1rem; margin: 1rem 0; }
+.case-note-record { padding: 1rem; border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white); }
+.case-record-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .8rem; }
+.case-record-header h4 { margin: .2rem 0 0; color: var(--navy-deep); }
+.case-note-record > label { display: grid; gap: .4rem; margin-top: .8rem; color: var(--navy-deep); font-weight: 700; }
+.case-insights-summary { margin: 1rem 0; padding: 1rem; border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--gray-050); }
+.case-insights-summary > h3 { margin-top: 0; }
+.case-summary-record + .case-summary-record { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300); }
+.case-summary-record h4 { margin: 0 0 .6rem; color: var(--navy-deep); }
+.case-summary-record dl { display: grid; grid-template-columns: minmax(190px, .75fr) 1.25fr; gap: .35rem 1rem; margin: 0; }
+.case-summary-record dt { font-weight: 700; color: var(--navy-deep); }
+.case-summary-record dd { margin: 0; white-space: pre-wrap; }
+@media (max-width: 680px) {
+  .case-selection-grid { grid-template-columns: 1fr; }
+  .case-record-header { flex-direction: column; }
+  .case-record-header .button { width: 100%; justify-content: center; }
+  .case-summary-record dl { grid-template-columns: 1fr; }
+}
+@media print {
+  .case-selection-fieldset,
+  .selected-case-notes,
+  #case-selection-status,
+  #case-transfer,
+  #case-transfer-status { display: none !important; }
 }
