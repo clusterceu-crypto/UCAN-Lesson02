@@ -1,28 +1,30 @@
-# UCAN Lesson 02 — Non-Local Platform Improvements Pilot v0.1
+# UCAN Lesson 02 — Gold Release v2.3
 
-This build uses **UCAN Lesson 02 Gold Release v2.2 + CASE_OTHER Hotfix** as the executable baseline.
+## Run
 
-## Purpose
+Extract the archive and serve the folder through an HTTP/HTTPS server. Open `index.html`. The lesson has no server-side dependency and stores learner data locally in the browser.
 
-Lesson 02 validates reusable internal UCAN HTML components before any cross-lesson standardization.
-The pilot does not change the instructional content, page order, approved cases, Portfolio data model,
-AI prompt content model, storage keys, visual assets, official URLs, or GitHub Pages deployment model.
+## Runtime files
 
-## Runtime structure
+- `index.html`
+- `css/style.css`
+- `js/script.js`
+- `assets/images/` — three approved visual assets
 
-- `index.html` — Lesson 02 content and component markup.
-- `css/ucan-core.css` — additive reusable component foundation.
-- `css/style.css` — approved Lesson 02 visual layer, retained to reduce regression risk.
-- `js/ucan-core.js` — reusable storage, notification, dialog, image viewer, form, clipboard and PDF helpers.
-- `js/script.js` — Lesson 02-specific data, learning flow, prompts, gates and case/Portfolio rules.
-- `assets/images/` — approved A01–A03 assets, byte-preserved.
-- `docs/` — pilot reports, component assessment and manifest.
+## UX harmonization v2.3
 
-## Data preservation
+- the Portfolio action is labelled `📄 Завантажити мою картку PDF`;
+- PDF is created locally through the canonical Lesson 01 canvas → JPEG → PDF Blob → browser download workflow;
+- the browser print dialog is not used;
+- the downloaded filename follows `Картка_кліматичного_виклику_<Назва_громади>_<YYYY-MM-DD>.pdf`;
+- AI prompt copy happens immediately and provides concise learner feedback;
+- the AI prompt preview dialog and its obsolete handlers were removed;
+- all Lesson 02 Portfolio, CASE_OTHER, AI-mode, navigation, progress, quiz and localStorage behavior remains compatible with v2.2.
 
-Existing localStorage keys remain unchanged. The build does not clear or migrate learner data.
+## Privacy
 
-## Validation status
+Portfolio, case notes and progress remain in browser localStorage. External AI platforms receive nothing automatically. PDF creation is local and makes no server request.
 
-This is a **validation pilot**, not a UCAN Master Template or platform standard. Reuse decisions require
-cross-lesson validation, beginning with Lesson 03.
+## Verification boundary
+
+The v2.3 UX hotfix passed JavaScript syntax, package integrity and controlled Chromium regression checks. It is not a new full QA cycle.
