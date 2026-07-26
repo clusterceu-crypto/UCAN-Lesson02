@@ -232,11 +232,12 @@
   window.UCANInterface = Object.freeze(Interface);
 })();
 
-/* UCAN Lesson 02 Consolidated Corrective Release v2.5. */
+/* UCAN Lesson 02 Gold Release v2.6 — navigation harmonization. */
 (() => {
   'use strict';
 
   const TOTAL_PAGES = 10;
+  const NEXT_LESSON_URL = 'https://clusterceu-crypto.github.io/UCAN-Lesson03/';
   const PAGE_KEY = 'ucan_l02_progress_v1';
   const FORM_KEY = 'ucan_l02_portfolio_v1';
   const TEST_KEY = 'ucan_l02_test_v2';
@@ -277,6 +278,7 @@
   const progressTrack = document.getElementById('progress-track');
   const pageLabel = document.getElementById('page-label');
   const navPageCount = document.getElementById('nav-page-count');
+  const lessonSectionList = document.getElementById('lesson-section-list');
   const globalStatus = document.getElementById('global-status');
   const tocToggle = document.querySelector('.toc-toggle');
   const tocList = document.getElementById('toc-list');
@@ -297,11 +299,40 @@
     return match ? normalizePage(match[1]) : null;
   };
 
+  function pageLinkIsAvailable(link) {
+    const target = normalizePage(link.dataset.pageLink);
+    const finalPageUnlocked = target === TOTAL_PAGES && testPassed && maxVisited >= TOTAL_PAGES - 1;
+    if (target > maxVisited && !finalPageUnlocked) return false;
+    if (link.dataset.requiresTest === 'true' && !testPassed) return false;
+    return true;
+  }
+
+  function scrollActiveSectionIntoView(activeLink) {
+    if (!lessonSectionList || !activeLink) return;
+    const left = Math.max(0, activeLink.offsetLeft - ((lessonSectionList.clientWidth - activeLink.offsetWidth) / 2));
+    lessonSectionList.scrollTo({ left, behavior: scrollBehavior });
+  }
+
+  function updateSectionNavigation() {
+    let activeLink = null;
+    pageLinks.forEach((link) => {
+      const active = Number(link.dataset.pageLink) === currentPage;
+      const available = pageLinkIsAvailable(link) || active;
+      if ('disabled' in link) link.disabled = !available;
+      link.setAttribute('aria-disabled', String(!available));
+      link.title = available ? '' : (link.dataset.requiresTest === 'true' && !testPassed ? 'Спочатку правильно виконайте підсумковий тест.' : 'Цей розділ стане доступним після проходження попередніх розділів.');
+      if (active) {
+        link.setAttribute('aria-current', 'page');
+        activeLink = link;
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+    scrollActiveSectionIntoView(activeLink);
+  }
+
   function updateTestGate() {
-    const finalLink = document.querySelector('[data-requires-test="true"]');
-    if (!finalLink) return;
-    finalLink.setAttribute('aria-disabled', testPassed ? 'false' : 'true');
-    finalLink.title = testPassed ? '' : 'Спочатку правильно виконайте підсумковий тест.';
+    updateSectionNavigation();
   }
 
   function scenarioState() {
@@ -381,22 +412,20 @@
     }
     safeStorage.set(MAX_PAGE_KEY, String(maxVisited));
     pages.forEach((page) => page.classList.toggle('is-active', Number(page.dataset.page) === currentPage));
-    pageLinks.forEach((link) => {
-      const active = Number(link.dataset.pageLink) === currentPage;
-      if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
-    });
+    updateSectionNavigation();
 
     const percent = lessonCompleted ? 100 : Math.round((maxVisited / TOTAL_PAGES) * 100);
-    progressText.textContent = lessonCompleted ? 'Заняття завершено' : `Сторінка ${currentPage} з ${TOTAL_PAGES}`;
+    progressText.textContent = `Сторінка ${currentPage} із ${TOTAL_PAGES}`;
     if (progressPercent) progressPercent.textContent = `${percent}%`;
     progressBar.style.width = `${percent}%`;
     progressTrack.setAttribute('aria-valuenow', String(percent));
-    progressTrack.setAttribute('aria-valuetext', lessonCompleted ? 'Заняття завершено, прогрес 100%' : `Сторінка ${currentPage} з ${TOTAL_PAGES}, прогрес ${percent}%`);
+    progressTrack.setAttribute('aria-valuetext', `Сторінка ${currentPage} із ${TOTAL_PAGES}, прогрес ${percent}%`);
     prevPageButton.disabled = currentPage === 1;
-    nextPageButton.disabled = currentPage === TOTAL_PAGES || (currentPage === 9 && !testPassed);
-    nextPageButton.textContent = currentPage === 9 && !testPassed ? 'Спочатку виконайте тест' : currentPage === TOTAL_PAGES ? 'Заняття завершено' : 'Наступний розділ ➡️';
+    nextPageButton.disabled = currentPage === 9 && !testPassed;
+    nextPageButton.textContent = currentPage === TOTAL_PAGES ? 'Наступне заняття →' : 'Наступний розділ →';
+    nextPageButton.title = currentPage === 9 && !testPassed ? 'Спочатку правильно виконайте підсумковий тест.' : '';
     if (pageLabel) { const active = pages[currentPage - 1]; pageLabel.textContent = active?.dataset.pageLabel || ''; }
-    if (navPageCount) navPageCount.textContent = `${currentPage} / ${TOTAL_PAGES}`;
+    if (navPageCount) navPageCount.textContent = `Сторінка ${currentPage} із ${TOTAL_PAGES}`;
 
     safeStorage.set(PAGE_KEY, String(currentPage));
     const hash = `#page-${currentPage}`;
@@ -429,7 +458,13 @@
   });
 
   prevPageButton.addEventListener('click', () => showPage(currentPage - 1, { focus: true, bypassScenarioCheckpoint: true }));
-  nextPageButton.addEventListener('click', () => showPage(currentPage + 1, { focus: true }));
+  nextPageButton.addEventListener('click', () => {
+    if (currentPage === TOTAL_PAGES) {
+      window.location.assign(NEXT_LESSON_URL);
+      return;
+    }
+    showPage(currentPage + 1, { focus: true });
+  });
   if (tocToggle && tocList) tocToggle.addEventListener('click', () => {
     const open = tocList.classList.toggle('is-open');
     tocToggle.setAttribute('aria-expanded', String(open));
@@ -1548,7 +1583,7 @@ ${contract.output}`;
       testStatus.textContent = 'Усі відповіді правильні. Можна перейти до підсумку заняття.';
       testStatus.className = 'feedback is-correct';
       nextPageButton.disabled = false;
-      nextPageButton.textContent = 'Перейти до підсумку ➡️';
+      nextPageButton.textContent = 'Наступний розділ →';
       updateTestGate();
     } else {
       testStatus.textContent = `Правильних відповідей: ${score} з 5. Перегляньте пояснення і спробуйте ще раз.`;

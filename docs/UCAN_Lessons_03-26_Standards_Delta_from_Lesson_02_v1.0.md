@@ -216,6 +216,57 @@ Purpose: capture only reusable rules demonstrated by actual Lesson 02 corrective
 - **Affected role:** Release Packaging Engineer, Final QA Auditor.
 - **Affected Lessons:** 03–26.
 
+
+## 16. Navigation Contract
+
+### Rule NAV-01 — Global Previous Lesson Navigation
+- **Mandatory requirement:** The top UCAN header must contain a persistent `← Попереднє заняття` action immediately after the UCAN brand on every lesson page.
+- **Rationale:** Inter-lesson navigation must remain visible independently of the current lesson section.
+- **Implementation requirement:** Use a semantic link to the canonical previous-lesson URL, keyboard-accessible and visually aligned with the header utility actions.
+- **QA test:** Verify visibility and keyboard activation on every page at desktop, tablet and mobile widths.
+- **Affected role:** UX Architect, HTML/LMS Builder, Functional QA.
+- **Affected Lessons:** 03–26.
+
+### Rule NAV-02 — Progress Summary
+- **Mandatory requirement:** Directly below the global header, display `Сторінка X із Y`, the completion percentage and a horizontal progress bar.
+- **Rationale:** The learner needs both current position and overall progress without opening another control.
+- **Implementation requirement:** Keep visible text and progressbar ARIA values synchronized after navigation and reload.
+- **QA test:** Navigate forward/backward, reload and compare page number, percentage, width and `aria-valuetext`.
+- **Affected role:** HTML/LMS Builder, Accessibility QA, Functional QA.
+- **Affected Lessons:** 03–26.
+
+### Rule NAV-03 — Lesson Section Strip
+- **Mandatory requirement:** Show all lesson sections in one horizontal navigation strip, highlight the active section and permit navigation only to sections already unlocked by the lesson flow.
+- **Rationale:** A section strip supports orientation and rapid return without bypassing learning gates.
+- **Implementation requirement:** Use semantic buttons or links with stable page identifiers, `aria-current="page"`, disabled/locked states and automatic horizontal scrolling that keeps the active item visible.
+- **QA test:** Verify active state, locked state, jump to every unlocked section, automatic centering and mobile horizontal scrolling.
+- **Affected role:** UX Architect, HTML/LMS Builder, Functional QA.
+- **Affected Lessons:** 03–26.
+
+### Rule NAV-04 — Sticky Internal Navigation
+- **Mandatory requirement:** A persistent lower navigation control must provide `← Попередній розділ` and `Наступний розділ →` throughout the lesson.
+- **Rationale:** Sequential movement must be predictable and available without returning to the top of the page.
+- **Implementation requirement:** Keep the previous action disabled on the first page; preserve lesson-specific gates on the next action; do not replace the action label with a completion message.
+- **QA test:** Traverse every section, test gate states, keyboard activation and narrow-screen readability.
+- **Affected role:** HTML/LMS Builder, Functional QA, Mobile QA.
+- **Affected Lessons:** 03–26.
+
+### Rule NAV-05 — Final Page and Inter-Lesson Transition
+- **Mandatory requirement:** On the final page, the lower left action remains `← Попередній розділ` and the lower right action becomes the functional `Наступне заняття →` link/action to the canonical next-lesson URL.
+- **Rationale:** Internal progression and inter-lesson progression must have distinct, non-duplicated placements.
+- **Implementation requirement:** Remove duplicate previous/next lesson buttons from final-page content. Inter-lesson navigation exists only in the top previous-lesson action and final sticky next-lesson action.
+- **QA test:** Verify no duplicate final-page controls and confirm the exact production URLs.
+- **Affected role:** UX Architect, HTML/LMS Builder, Release QA.
+- **Affected Lessons:** 03–26.
+
+### Rule NAV-06 — Responsive Navigation Behaviour
+- **Mandatory requirement:** Navigation must remain usable at desktop, laptop, tablet and mobile widths without horizontal document overflow.
+- **Rationale:** The global header, section strip and sticky navigation are persistent controls and must not obscure lesson content.
+- **Implementation requirement:** On mobile, the section strip scrolls horizontally, the active item is brought into view, the previous-lesson action does not overlap the lesson title, and sticky actions remain readable touch targets.
+- **QA test:** Test at least 1440 px, 1024 px, 768 px and 390 px widths; verify scroll width, focus visibility and control overlap.
+- **Affected role:** Designer, HTML/LMS Builder, Mobile QA, Accessibility QA.
+- **Affected Lessons:** 03–26.
+
 ## Delta status
 
 **Ready for controlled application to Lessons 03–26.** These rules are reusable production requirements derived from confirmed Lesson 02 defects and corrections. They do not alter curriculum architecture or create new learning content.

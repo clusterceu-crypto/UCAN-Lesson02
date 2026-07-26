@@ -964,3 +964,126 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] {
   .ai-service-actions .button { width: 100%; justify-content: center; }
 }
 
+
+
+/* Lesson 02 v2.6 — final navigation harmonization. */
+body[data-ucan-interface="1.0"] .header-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+body[data-ucan-interface="1.0"] .header-lesson-link { white-space: nowrap; }
+body[data-ucan-interface="1.0"] .lesson-progress-navigation {
+  background: var(--ucan-ui-white);
+  border-bottom: 1px solid var(--ucan-ui-grey-200);
+  box-shadow: 0 3px 10px rgba(18,63,104,0.08);
+}
+body[data-ucan-interface="1.0"] .lesson-progress-navigation .progress-shell {
+  border-bottom: 0;
+}
+body[data-ucan-interface="1.0"] .lesson-section-strip {
+  padding: 0 max(1rem, calc((100vw - var(--ucan-ui-content)) / 2)) 0.65rem;
+}
+body[data-ucan-interface="1.0"] .lesson-section-list {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  scroll-snap-type: inline proximity;
+  padding: 0.15rem 0 0.35rem;
+}
+body[data-ucan-interface="1.0"] .lesson-section-link {
+  flex: 0 0 auto;
+  min-height: 40px;
+  max-width: 16rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--ucan-ui-grey-300);
+  border-radius: 999px;
+  color: var(--ucan-ui-blue-900);
+  background: var(--ucan-ui-white);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: center;
+}
+body[data-ucan-interface="1.0"] .lesson-section-link:hover:not(:disabled) {
+  background: var(--ucan-ui-blue-100);
+  border-color: var(--ucan-ui-blue-900);
+}
+body[data-ucan-interface="1.0"] .lesson-section-link[aria-current="page"] {
+  color: var(--ucan-ui-white);
+  background: var(--ucan-ui-blue-900);
+  border-color: var(--ucan-ui-blue-900);
+}
+body[data-ucan-interface="1.0"] .lesson-section-link:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+body[data-ucan-interface="1.0"] .lesson-section-link:focus-visible {
+  outline: 4px solid var(--ucan-ui-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  body[data-ucan-interface="1.0"] .site-header {
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+    gap: 0.65rem;
+  }
+  body[data-ucan-interface="1.0"] .header-brand-group { gap: 0.5rem; }
+  body[data-ucan-interface="1.0"] .header-lesson-link { padding-inline: 0.65rem; }
+}
+
+@media (max-width: 680px) {
+  body[data-ucan-interface="1.0"] .site-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem;
+  }
+  body[data-ucan-interface="1.0"] .header-brand-group {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    width: 100%;
+  }
+  body[data-ucan-interface="1.0"] .site-header .header-lesson-link {
+    grid-column: auto;
+    width: auto;
+  }
+  body[data-ucan-interface="1.0"] .site-header #reset-progress-top {
+    grid-column: auto;
+    width: auto;
+  }
+  body[data-ucan-interface="1.0"] .header-center {
+    justify-content: flex-start;
+    text-align: left;
+  }
+  body[data-ucan-interface="1.0"] .page-label { max-width: 42vw; }
+  body[data-ucan-interface="1.0"] .progress-shell {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+  body[data-ucan-interface="1.0"] .progress-shell .progress-text { display: inline; }
+  body[data-ucan-interface="1.0"] .progress-bar { grid-column: 1 / -1; width: 100%; }
+  body[data-ucan-interface="1.0"] .lesson-section-strip { padding-inline: 0.5rem; }
+  body[data-ucan-interface="1.0"] .lesson-section-link { min-height: 44px; max-width: 14rem; }
+  body[data-ucan-interface="1.0"] .lesson-nav {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  body[data-ucan-interface="1.0"] .lesson-nav .nav-page-count { display: none; }
+}
+
+@media (max-width: 420px) {
+  body[data-ucan-interface="1.0"] .header-lesson-link,
+  body[data-ucan-interface="1.0"] #reset-progress-top { font-size: 0.76rem; }
+  body[data-ucan-interface="1.0"] .lesson-label,
+  body[data-ucan-interface="1.0"] .page-label { font-size: 0.74rem; }
+  body[data-ucan-interface="1.0"] .lesson-nav .button { font-size: 0.76rem; }
+}
+
+@media print {
+  body[data-ucan-interface="1.0"] .lesson-progress-navigation { display: none !important; }
+}
