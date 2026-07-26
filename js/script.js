@@ -385,6 +385,8 @@
 
   // Practice-oriented multi-case notes.
   const CASE_VERSION = 2;
+  const OTHER_CASE_ID = 'other';
+  const OTHER_CASE_HIDDEN_ID = 'other-hidden';
   const CASE_CATALOG = Object.freeze([
     { id: 'lviv', title: 'Львів — системна візія громади' },
     { id: 'rotterdam', title: 'Роттердам — багатофункціональна водна площа' },
@@ -402,7 +404,17 @@
   let caseState = { version: CASE_VERSION, records: [] };
 
   function cleanCaseRecord(record) {
-    const catalogItem = CASE_BY_ID.get(String(record?.id || ''));
+    const recordId = String(record?.id || '');
+    if (recordId === OTHER_CASE_ID || recordId === OTHER_CASE_HIDDEN_ID) {
+      return {
+        id: recordId,
+        title: typeof record.title === 'string' ? record.title : '',
+        problem: typeof record.problem === 'string' ? record.problem : '',
+        principle: typeof record.principle === 'string' ? record.principle : '',
+        localCheck: typeof record.localCheck === 'string' ? record.localCheck : ''
+      };
+    }
+    const catalogItem = CASE_BY_ID.get(recordId);
     if (!catalogItem) return null;
     return {
       id: catalogItem.id,
@@ -456,7 +468,8 @@
         const unique = [];
         const seen = new Set();
         records.forEach((record) => {
-          if (!seen.has(record.id)) { seen.add(record.id); unique.push(record); }
+          const uniqueId = record.id === OTHER_CASE_HIDDEN_ID ? OTHER_CASE_ID : record.id;
+          if (!seen.has(uniqueId)) { seen.add(uniqueId); unique.push(record); }
         });
         caseState = { version: CASE_VERSION, records: unique };
         return;
@@ -468,11 +481,20 @@
   }
 
   function caseRecords() {
-    return caseState.records.map((record) => ({ ...record }));
+    return caseState.records
+      .filter((record) => record.id !== OTHER_CASE_HIDDEN_ID)
+      .map((record) => ({ ...record }));
+  }
+
+  function storedOtherCaseRecord() {
+    return caseState.records.find((record) => record.id === OTHER_CASE_ID || record.id === OTHER_CASE_HIDDEN_ID) || null;
   }
 
   function caseRecordsForOutput() {
-    return caseRecords().filter((record) => [record.problem, record.principle, record.localCheck].some((value) => value.trim()));
+    return caseRecords().filter((record) => {
+      if (record.id === OTHER_CASE_ID && !record.title.trim()) return false;
+      return [record.problem, record.principle, record.localCheck].some((value) => value.trim());
+    });
   }
 
   function caseRecordText(records = caseRecordsForOutput()) {
@@ -480,15 +502,17 @@
     const communityName = document.getElementById('community-name')?.value.trim();
     const community = communityName ? `громаді «${communityName}»` : 'своїй громаді';
     return records.map((record, index) => `${index + 1}. ${record.title}
-- Що вирішувало місто: ${record.problem.trim() || '[не заповнено]'}
+- ${record.id === OTHER_CASE_ID ? 'Що вирішував приклад' : 'Що вирішувало місто'}: ${record.problem.trim() || '[не заповнено]'}
 - Корисний принцип: ${record.principle.trim() || '[не заповнено]'}
 - Що варто перевірити у ${community}: ${record.localCheck.trim() || '[не заповнено]'}`).join('\n\n');
   }
 
   function updateCaseCommunityName() {
-    if (!caseCommunityName) return;
     const value = document.getElementById('community-name')?.value.trim();
-    caseCommunityName.textContent = value || 'Вашої громади';
+    if (caseCommunityName) caseCommunityName.textContent = value || 'Вашої громади';
+    document.querySelectorAll('[data-other-case-community-label]').forEach((label) => {
+      label.textContent = value ? `Що варто перевірити у громаді «${value}»?` : 'Що варто перевірити у Вашій громаді?';
+    });
   }
 
   function refreshCaseDependentOutputs() {
@@ -512,10 +536,11 @@
   }
 
   function renderSelectedCaseNotes() {
-    caseSelectionInputs.forEach((input) => { input.checked = caseState.records.some((record) => record.id === input.value); });
+    const activeRecords = caseRecords();
+    caseSelectionInputs.forEach((input) => { input.checked = activeRecords.some((record) => record.id === input.value); });
     if (!selectedCaseNotes) return;
     selectedCaseNotes.innerHTML = '';
-    if (!caseState.records.length) {
+    if (!activeRecords.length) {
       const empty = document.createElement('p');
       empty.className = 'field-hint';
       empty.textContent = 'Оберіть щонайменше один приклад, щоб додати окремі нотатки.';
@@ -523,46 +548,102 @@
       return;
     }
 
-    caseState.records.forEach((record, index) => {
+    activeRecords.forEach((record, index) => {
+      const sourceRecord = caseState.records.find((item) => item.id === record.id);
+      if (!sourceRecord) return;
+      const isOtherCase = sourceRecord.id === OTHER_CASE_ID;
       const article = document.createElement('article');
       article.className = 'case-note-record';
-      article.dataset.caseId = record.id;
+      article.dataset.caseId = sourceRecord.id;
 
       const header = document.createElement('div');
       header.className = 'case-record-header';
       const heading = document.createElement('h4');
-      heading.id = `case-record-title-${record.id}`;
-      heading.textContent = `${index + 1}. ${record.title}`;
+      heading.id = `case-record-title-${sourceRecord.id}`;
+      heading.textContent = `${index + 1}. ${isOtherCase ? (sourceRecord.title.trim() || 'Інше') : sourceRecord.title}`;
       const remove = document.createElement('button');
       remove.type = 'button';
       remove.className = 'button button-secondary button-small';
       remove.textContent = 'Прибрати приклад';
-      remove.setAttribute('aria-label', `Прибрати приклад «${record.title}»`);
+      remove.setAttribute('aria-label', `Прибрати приклад «${isOtherCase ? (sourceRecord.title.trim() || 'Інше') : sourceRecord.title}»`);
       remove.addEventListener('click', () => {
-        const checkbox = caseSelectionInputs.find((input) => input.value === record.id);
+        const checkbox = caseSelectionInputs.find((input) => input.value === sourceRecord.id);
         if (checkbox) checkbox.checked = false;
-        removeCaseRecord(record.id, checkbox || { checked: false });
+        if (isOtherCase) {
+          sourceRecord.id = OTHER_CASE_HIDDEN_ID;
+          saveCaseState();
+          renderSelectedCaseNotes();
+          refreshCaseDependentOutputs();
+          if (caseSelectionStatus) {
+            caseSelectionStatus.textContent = 'Кейс «Інше» приховано. Введені дані збережено.';
+            caseSelectionStatus.className = 'feedback';
+          }
+        } else {
+          removeCaseRecord(sourceRecord.id, checkbox || { checked: false });
+        }
       });
       header.append(heading, remove);
       article.appendChild(header);
 
+      let otherTitleInput = null;
+      if (isOtherCase) {
+        const titleLabel = document.createElement('label');
+        titleLabel.setAttribute('for', 'case-other-title');
+        titleLabel.textContent = 'Назва прикладу';
+        otherTitleInput = document.createElement('input');
+        otherTitleInput.id = 'case-other-title';
+        otherTitleInput.type = 'text';
+        otherTitleInput.value = sourceRecord.title;
+        otherTitleInput.autocomplete = 'off';
+        otherTitleInput.addEventListener('input', () => {
+          sourceRecord.title = otherTitleInput.value;
+          const displayTitle = sourceRecord.title.trim() || 'Інше';
+          heading.textContent = `${index + 1}. ${displayTitle}`;
+          remove.setAttribute('aria-label', `Прибрати приклад «${displayTitle}»`);
+          article.querySelectorAll('[data-other-case-note-field]').forEach((field) => {
+            field.hidden = !sourceRecord.title.trim();
+          });
+          saveCaseState();
+          refreshCaseDependentOutputs();
+        });
+        titleLabel.appendChild(otherTitleInput);
+        article.appendChild(titleLabel);
+      }
+
+      const communityName = document.getElementById('community-name')?.value.trim();
       const fields = [
-        { key: 'problem', label: 'Яку управлінську проблему вирішувало місто?' },
+        { key: 'problem', label: isOtherCase ? 'Яку управлінську проблему вирішував цей приклад?' : 'Яку управлінську проблему вирішувало місто?' },
         { key: 'principle', label: 'Який принцип корисний для Вашої громади?' },
-        { key: 'localCheck', label: 'Що варто перевірити у своїй громаді через цей принцип?' }
+        {
+          key: 'localCheck',
+          label: isOtherCase
+            ? (communityName ? `Що варто перевірити у громаді «${communityName}»?` : 'Що варто перевірити у Вашій громаді?')
+            : 'Що варто перевірити у своїй громаді через цей принцип?'
+        }
       ];
       fields.forEach(({ key, label }) => {
-        const fieldId = `case-${record.id}-${key}`;
+        const fieldId = `case-${sourceRecord.id}-${key}`;
         const wrapper = document.createElement('label');
         wrapper.setAttribute('for', fieldId);
-        wrapper.textContent = label;
+        if (isOtherCase) {
+          wrapper.dataset.otherCaseNoteField = '';
+          wrapper.hidden = !sourceRecord.title.trim();
+        }
+        if (isOtherCase && key === 'localCheck') {
+          const labelText = document.createElement('span');
+          labelText.dataset.otherCaseCommunityLabel = '';
+          labelText.textContent = label;
+          wrapper.appendChild(labelText);
+        } else {
+          wrapper.appendChild(document.createTextNode(label));
+        }
         const textarea = document.createElement('textarea');
         textarea.id = fieldId;
         textarea.rows = 3;
-        textarea.value = record[key];
+        textarea.value = sourceRecord[key];
         textarea.dataset.caseField = key;
         textarea.addEventListener('input', () => {
-          record[key] = textarea.value;
+          sourceRecord[key] = textarea.value;
           saveCaseState();
           refreshCaseDependentOutputs();
         });
@@ -575,6 +656,33 @@
 
   caseSelectionInputs.forEach((input) => input.addEventListener('change', () => {
     const id = input.value;
+    if (id === OTHER_CASE_ID) {
+      const otherRecord = storedOtherCaseRecord();
+      if (input.checked) {
+        if (otherRecord) otherRecord.id = OTHER_CASE_ID;
+        else caseState.records.push({ id: OTHER_CASE_ID, title: '', problem: '', principle: '', localCheck: '' });
+        saveCaseState();
+        renderSelectedCaseNotes();
+        const titleInput = document.getElementById('case-other-title');
+        if (titleInput) titleInput.focus();
+        if (caseSelectionStatus) {
+          caseSelectionStatus.textContent = `Обрано прикладів: ${caseRecords().length}. Нотатки зберігаються у цьому браузері.`;
+          caseSelectionStatus.className = 'feedback is-correct';
+        }
+        refreshCaseDependentOutputs();
+      } else if (otherRecord) {
+        otherRecord.id = OTHER_CASE_HIDDEN_ID;
+        saveCaseState();
+        renderSelectedCaseNotes();
+        refreshCaseDependentOutputs();
+        if (caseSelectionStatus) {
+          caseSelectionStatus.textContent = 'Кейс «Інше» приховано. Введені дані збережено.';
+          caseSelectionStatus.className = 'feedback';
+        }
+      }
+      return;
+    }
+
     if (input.checked) {
       if (!caseState.records.some((record) => record.id === id) && CASE_BY_ID.has(id)) {
         const item = CASE_BY_ID.get(id);
@@ -583,7 +691,7 @@
       saveCaseState();
       renderSelectedCaseNotes();
       if (caseSelectionStatus) {
-        caseSelectionStatus.textContent = `Обрано прикладів: ${caseState.records.length}. Нотатки зберігаються у цьому браузері.`;
+        caseSelectionStatus.textContent = `Обрано прикладів: ${caseRecords().length}. Нотатки зберігаються у цьому браузері.`;
         caseSelectionStatus.className = 'feedback is-correct';
       }
       refreshCaseDependentOutputs();
@@ -1024,7 +1132,7 @@ ${selectedCaseContext}`;
       heading.textContent = `${index + 1}. ${record.title}`;
       const list = document.createElement('dl');
       [
-        ['Що вирішувало місто', record.problem],
+        [record.id === OTHER_CASE_ID ? 'Що вирішував приклад' : 'Що вирішувало місто', record.problem],
         ['Корисний принцип', record.principle],
         ['Що варто перевірити у своїй громаді', record.localCheck]
       ].forEach(([label, value]) => {
