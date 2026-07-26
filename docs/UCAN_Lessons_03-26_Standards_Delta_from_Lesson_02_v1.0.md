@@ -14,8 +14,8 @@ Purpose: capture only reusable rules demonstrated by actual Lesson 02 corrective
 
 ### Rule LOC-02
 - **Mandatory requirement:** One concept must use one learner-facing term across headings, buttons and statuses.
-- **Rationale:** Lesson 02 mixed AI / ШІ and prompt / request terms.
-- **Implementation requirement:** Define the preferred term before implementation and verify all generated strings.
+- **Rationale:** Lesson 02 used inconsistent learner-facing terminology for the AI consultation function and for prompts.
+- **Implementation requirement:** Use `АІ-консультант` as the learner-facing term; preserve technical identifiers, data attributes, CSS classes and JavaScript variable names. Verify all generated strings.
 - **QA test:** Terminology inventory across HTML and JavaScript.
 - **Affected role:** Editor, HTML/LMS Builder, QA.
 - **Affected Lessons:** 03–26.

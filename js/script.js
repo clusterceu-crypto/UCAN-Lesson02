@@ -1491,7 +1491,7 @@ ${contract.output}`;
   });
 
   document.querySelectorAll('[data-ai-platform]').forEach((link) => link.addEventListener('click', () => {
-    const platform = link.dataset.aiPlatform || 'ШІ-сервіс';
+    const platform = link.dataset.aiPlatform || 'сервіс АІ-консультанта';
     if (aiServiceStatus) {
       aiServiceStatus.textContent = `${platform} відкривається в новій вкладці. Вставте скопійований промпт у чат і перевірте відповідь самостійно.`;
       aiServiceStatus.className = 'feedback';
