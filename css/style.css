@@ -16,7 +16,7 @@
   --danger: #8b2e2e;
   --shadow: 0 12px 30px rgba(13, 41, 69, 0.08);
   --radius: 16px;
-  --content: 1120px;
+  --content: 1240px;
 }
 
 * { box-sizing: border-box; }
@@ -388,7 +388,7 @@ select {
   --ucan-ui-danger-bg: #fff1f1;
   --ucan-ui-shadow: 0 12px 36px rgba(18, 63, 104, 0.10);
   --ucan-ui-radius: 16px;
-  --ucan-ui-content: 980px;
+  --ucan-ui-content: 1240px;
   --ucan-ui-focus: 3px solid #168fa1;
 }
 
