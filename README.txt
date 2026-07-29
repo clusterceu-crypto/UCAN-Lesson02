@@ -1,24 +1,8 @@
-UCAN Lesson 02 — HTML Build v1.0
+UCAN Lesson Header Standard Preview
 
-Вміст пакета
-- index.html — автономна learner-facing версія заняття.
-- css/style.css — локальні стилі, responsive та print rules.
-- js/script.js — навігація, інтерактив, локальне збереження форми й підсумковий тест.
-- assets/images/ — три затверджені PNG.
+1. Extract the ZIP archive.
+2. Open index.html in a browser.
+3. Review the header, progress bar and navigation tabs on desktop and mobile widths.
 
-Запуск
-1. Розпакуйте ZIP-архів.
-2. Відкрийте index.html у сучасному браузері.
-3. Підключення до Інтернету не потрібне.
-
-Локальні дані
-Відповіді практичного завдання та прогрес зберігаються в localStorage поточного браузера. Дані не передаються на сервер.
-
-Друк / PDF
-У практичному завданні натисніть «Відповісти», потім «Підготувати до друку / PDF». У системному діалозі друку оберіть друк або збереження у PDF.
-
-Відомі межі Builder Candidate
-- Незалежний HTML Conformance QA ще не виконано.
-- Formal Functional QA ще не виконано.
-- Зовнішні ресурси та відео без підтверджених посилань не включено.
-- Пакет не є опублікованим Release.
+This package is for visual review only.
+No commit or push has been performed.

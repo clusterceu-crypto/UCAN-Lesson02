@@ -1087,3 +1087,444 @@ body[data-ucan-interface="1.0"] .lesson-section-link:focus-visible {
 @media print {
   body[data-ucan-interface="1.0"] .lesson-progress-navigation { display: none !important; }
 }
+
+/* UCAN Header Standard v1.0
+   Shared compact header for Lessons 01-03; reference structure: Lesson 03. */
+:root {
+  --ucan-header-navy: #06265f;
+  --ucan-header-white: #ffffff;
+  --ucan-header-teal: #149eb5;
+  --ucan-header-teal-soft: #e5f7fa;
+  --ucan-header-green: #0b722d;
+  --ucan-header-grey-100: #f4f7f9;
+  --ucan-header-grey-200: #dde5eb;
+  --ucan-header-grey-300: #c8d4dd;
+  --ucan-header-grey-700: #4a5a68;
+  --ucan-header-content: 1240px;
+  --ucan-header-font: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.ucan-header-standard {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  margin: 0;
+  padding: 0;
+  color: var(--ucan-header-white);
+  background: var(--ucan-header-navy);
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 3px 12px rgba(6, 38, 95, 0.12);
+}
+.ucan-header-standard .header-inner {
+  width: min(100% - 1.5rem, var(--ucan-header-content));
+  min-height: 64px;
+  margin-inline: auto;
+  padding: 0.75rem 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+}
+.ucan-header-standard .header-brand-group {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ucan-header-standard .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--ucan-header-white);
+  font-family: var(--ucan-header-font);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.ucan-header-standard .brand-mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  color: var(--ucan-header-navy);
+  background: var(--ucan-header-white);
+  border-radius: 50%;
+  font-family: var(--ucan-header-font);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.ucan-header-standard .brand-text { color: inherit; }
+.ucan-header-standard .header-center {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  text-align: center;
+}
+.ucan-header-standard .lesson-label,
+.ucan-header-standard .page-label {
+  margin: 0;
+  font-family: var(--ucan-header-font);
+  line-height: 1.25;
+}
+.ucan-header-standard .lesson-label {
+  color: var(--ucan-header-white);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.ucan-header-standard .page-label {
+  max-width: 42vw;
+  overflow: hidden;
+  color: var(--ucan-header-teal-soft);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ucan-header-standard .button-quiet,
+.ucan-header-standard .button-small {
+  min-height: 36px;
+  padding: 0.4rem 0.7rem;
+  color: var(--ucan-header-white);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 999px;
+  font-family: var(--ucan-header-font);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.ucan-header-standard .button-quiet:hover,
+.ucan-header-standard .button-small:hover {
+  color: var(--ucan-header-navy);
+  background: var(--ucan-header-white);
+  border-color: var(--ucan-header-white);
+}
+.ucan-header-standard .header-action-spacer { width: 1px; height: 36px; }
+
+.ucan-progress-standard {
+  position: relative;
+  z-index: 45;
+  background: var(--ucan-header-white);
+  border-bottom: 1px solid var(--ucan-header-grey-200);
+  box-shadow: 0 2px 8px rgba(6, 38, 95, 0.04);
+}
+.ucan-progress-standard .progress-shell {
+  width: min(100% - 1.5rem, var(--ucan-header-content));
+  margin-inline: auto;
+  padding: 0.65rem 0 0.55rem;
+  display: grid;
+  grid-template-columns: auto auto minmax(120px, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+.ucan-progress-standard .progress-text,
+.ucan-progress-standard .progress-percent,
+.ucan-progress-standard #progressLabel,
+.ucan-progress-standard #progressPercent {
+  color: var(--ucan-header-grey-700);
+  font-family: var(--ucan-header-font);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.ucan-progress-standard .progress-percent,
+.ucan-progress-standard #progressPercent {
+  color: var(--ucan-header-green);
+  font-weight: 800;
+}
+.ucan-progress-standard .progress-track,
+.ucan-progress-standard .progress-bar[role="progressbar"] {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  background: var(--ucan-header-grey-200);
+  border: 0;
+  border-radius: 999px;
+}
+.ucan-progress-standard .progress-fill,
+.ucan-progress-standard .progress-track > .progress-bar,
+.ucan-progress-standard .progress-bar > .progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--ucan-header-teal);
+  border-radius: 999px;
+  transition: width 180ms ease;
+}
+.ucan-progress-standard .lesson-section-strip,
+.ucan-progress-standard.page-menu,
+.ucan-progress-standard .page-menu {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  background: var(--ucan-header-white);
+  border-top: 1px solid var(--ucan-header-grey-200);
+  scrollbar-width: thin;
+}
+.ucan-progress-standard .lesson-section-list,
+.ucan-progress-standard.page-menu,
+.ucan-progress-standard .page-menu {
+  min-width: max-content;
+}
+.ucan-progress-standard .lesson-section-list {
+  width: min(100% - 1.5rem, var(--ucan-header-content));
+  margin-inline: auto;
+  padding: 0.55rem 0;
+  display: flex;
+  gap: 0.45rem;
+}
+.ucan-progress-standard .page-menu {
+  width: min(100% - 1.5rem, var(--ucan-header-content));
+  margin-inline: auto;
+  padding: 0.55rem 0;
+  display: flex;
+  gap: 0.45rem;
+}
+.ucan-progress-standard .lesson-section-link,
+.ucan-progress-standard .page-menu button {
+  min-height: 40px;
+  padding: 0.55rem 0.85rem;
+  color: var(--ucan-header-navy);
+  background: var(--ucan-header-white);
+  border: 1px solid var(--ucan-header-grey-300);
+  border-radius: 999px;
+  font-family: var(--ucan-header-font);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.ucan-progress-standard .lesson-section-link:hover:not(:disabled),
+.ucan-progress-standard .page-menu button:hover:not(:disabled) {
+  border-color: var(--ucan-header-teal);
+  background: var(--ucan-header-teal-soft);
+}
+.ucan-progress-standard .lesson-section-link[aria-current="page"],
+.ucan-progress-standard .page-menu button.active {
+  color: var(--ucan-header-white);
+  background: var(--ucan-header-navy);
+  border-color: var(--ucan-header-navy);
+}
+.ucan-progress-standard .lesson-section-link.is-completed:not([aria-current="page"]),
+.ucan-progress-standard .page-menu button.completed:not(.active) {
+  color: var(--ucan-header-green);
+  border-color: var(--ucan-header-green);
+}
+.ucan-progress-standard .lesson-section-link:disabled,
+.ucan-progress-standard .page-menu button:disabled,
+.ucan-progress-standard .page-menu button.locked {
+  color: var(--ucan-header-grey-700);
+  background: var(--ucan-header-grey-100);
+  border-color: var(--ucan-header-grey-300);
+}
+.ucan-header-standard :focus-visible,
+.ucan-progress-standard :focus-visible {
+  outline: 3px solid var(--ucan-header-teal);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .ucan-header-standard .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem 0.75rem;
+    padding-block: 0.65rem;
+  }
+  .ucan-header-standard .header-brand-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 0.45rem;
+  }
+  .ucan-header-standard .header-lesson-link { width: 100%; }
+  .ucan-header-standard .header-center {
+    justify-content: flex-end;
+    text-align: right;
+  }
+  .ucan-header-standard .page-label { max-width: 45vw; }
+  .ucan-header-standard #reset-progress,
+  .ucan-header-standard #reset-progress-top {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .ucan-header-standard .header-action-spacer { display: none; }
+  .ucan-progress-standard .progress-shell {
+    width: min(100% - 1rem, var(--ucan-header-content));
+    grid-template-columns: auto minmax(100px, 1fr);
+    gap: 0.5rem;
+  }
+  .ucan-progress-standard .progress-text,
+  .ucan-progress-standard #progressLabel { display: none; }
+  .ucan-progress-standard .lesson-section-list,
+  .ucan-progress-standard .page-menu {
+    width: min(100% - 1rem, var(--ucan-header-content));
+  }
+  .ucan-progress-standard .lesson-section-link,
+  .ucan-progress-standard .page-menu button {
+    min-height: 44px;
+    padding: 0.6rem 0.85rem;
+  }
+}
+
+@media print {
+  .ucan-header-standard,
+  .ucan-progress-standard { display: none !important; }
+}
+
+
+/* Lesson 02 specificity bridge for UCAN Header Standard v1.0. */
+body[data-ucan-interface="1.0"] .ucan-header-standard {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  color: var(--ucan-header-white);
+  background: var(--ucan-header-navy);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 3px 12px rgba(6, 38, 95, 0.12);
+}
+body[data-ucan-interface="1.0"] .ucan-header-standard .header-inner {
+  width: min(100% - 1.5rem, var(--ucan-header-content));
+  min-height: 64px;
+  margin-inline: auto;
+  padding: 0.75rem 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+}
+body[data-ucan-interface="1.0"] .ucan-header-standard .header-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+body[data-ucan-interface="1.0"] .ucan-header-standard .brand {
+  color: var(--ucan-header-white);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+body[data-ucan-interface="1.0"] .ucan-header-standard .brand-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  color: var(--ucan-header-navy);
+  background: var(--ucan-header-white);
+  border-radius: 50%;
+}
+body[data-ucan-interface="1.0"] .ucan-header-standard .lesson-label {
+  color: var(--ucan-header-white);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+body[data-ucan-interface="1.0"] .ucan-header-standard .page-label {
+  color: var(--ucan-header-teal-soft);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .progress-shell {
+  width: min(100% - 1.5rem, var(--ucan-header-content));
+  min-height: 0;
+  margin-inline: auto;
+  padding: 0.65rem 0 0.55rem;
+  display: grid;
+  grid-template-columns: auto auto minmax(120px, 1fr);
+  gap: 0.75rem;
+  background: var(--ucan-header-white);
+  border: 0;
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .progress-bar {
+  grid-column: auto;
+  width: 100%;
+  height: 8px;
+  background: var(--ucan-header-grey-200);
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .progress-fill {
+  background: var(--ucan-header-teal);
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .progress-text,
+body[data-ucan-interface="1.0"] .ucan-progress-standard .progress-percent {
+  color: var(--ucan-header-grey-700);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .progress-percent {
+  color: var(--ucan-header-green);
+  font-weight: 800;
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .lesson-section-strip {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--ucan-header-white);
+  border-top: 1px solid var(--ucan-header-grey-200);
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .lesson-section-list {
+  width: min(100% - 1.5rem, var(--ucan-header-content));
+  margin-inline: auto;
+  padding: 0.55rem 0;
+  gap: 0.45rem;
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .lesson-section-link {
+  min-height: 40px;
+  max-width: none;
+  padding: 0.55rem 0.85rem;
+  color: var(--ucan-header-navy);
+  background: var(--ucan-header-white);
+  border-color: var(--ucan-header-grey-300);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .lesson-section-link:hover:not(:disabled) {
+  border-color: var(--ucan-header-teal);
+  background: var(--ucan-header-teal-soft);
+}
+body[data-ucan-interface="1.0"] .ucan-progress-standard .lesson-section-link[aria-current="page"] {
+  color: var(--ucan-header-white);
+  background: var(--ucan-header-navy);
+  border-color: var(--ucan-header-navy);
+}
+@media (max-width: 760px) {
+  body[data-ucan-interface="1.0"] .ucan-header-standard .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem 0.75rem;
+    padding-block: 0.65rem;
+  }
+  body[data-ucan-interface="1.0"] .ucan-header-standard .header-brand-group {
+    grid-column: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: start;
+    width: auto;
+    gap: 0.45rem;
+  }
+  body[data-ucan-interface="1.0"] .ucan-header-standard .header-lesson-link {
+    width: 100%;
+  }
+  body[data-ucan-interface="1.0"] .ucan-header-standard #reset-progress-top {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  body[data-ucan-interface="1.0"] .ucan-header-standard .header-center {
+    justify-content: flex-end;
+    text-align: right;
+  }
+  body[data-ucan-interface="1.0"] .ucan-progress-standard .progress-shell {
+    width: min(100% - 1rem, var(--ucan-header-content));
+    grid-template-columns: auto minmax(100px, 1fr);
+    gap: 0.5rem;
+  }
+  body[data-ucan-interface="1.0"] .ucan-progress-standard .progress-text { display: none; }
+  body[data-ucan-interface="1.0"] .ucan-progress-standard .progress-bar {
+    grid-column: auto;
+    width: 100%;
+  }
+  body[data-ucan-interface="1.0"] .ucan-progress-standard .lesson-section-strip { padding: 0; }
+  body[data-ucan-interface="1.0"] .ucan-progress-standard .lesson-section-list {
+    width: min(100% - 1rem, var(--ucan-header-content));
+  }
+}
